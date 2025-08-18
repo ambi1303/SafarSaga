@@ -1,10 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Explicitly disable static export
+  output: undefined,
+  trailingSlash: false,
   eslint: {
     ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
   },
   images: {
     remotePatterns: [
@@ -14,7 +14,6 @@ const nextConfig = {
       },
     ],
   },
-  swcMinify: true,
 };
 
 module.exports = nextConfig;
