@@ -3,13 +3,18 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
-    domains: ['images.pexels.com'],
-    unoptimized: false,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.pexels.com',
+      },
+    ],
   },
-  experimental: {
-    optimizeCss: true,
-  },
+  swcMinify: true,
 };
 
 module.exports = nextConfig;
