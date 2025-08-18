@@ -21,9 +21,14 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 text-2xl font-bold text-sky-600">
-            <Plane className="h-8 w-8" />
-            <span>Wanderlust</span>
+          <Link href="/" className="flex items-center group">
+            <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-white to-gray-50 shadow-lg border border-gray-200 p-3 transition-all duration-300 group-hover:shadow-xl group-hover:scale-105 group-hover:from-gray-50 group-hover:to-white">
+              <img 
+                src="/logo.png.png" 
+                alt="SafarSaga - Every Journey Has A Story" 
+                className="h-20 w-auto object-contain drop-shadow-sm"
+              />
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
