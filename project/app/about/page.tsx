@@ -8,7 +8,7 @@ const teamMembers = [
     name: 'Sarah Johnson',
     role: 'Founder & CEO',
     image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop',
-    bio: 'With 15 years in travel industry, Sarah founded Wanderlust to make extraordinary travel accessible to everyone.'
+    bio: 'With 15 years in travel industry, Sarah founded SafarSaga to make extraordinary travel accessible to everyone.'
   },
   {
     name: 'Michael Chen',
@@ -74,7 +74,7 @@ export default function AboutPage() {
           <div className="absolute inset-0 bg-sky-900/80"></div>
         </div>
         <div className="relative z-10 container mx-auto px-4 text-white text-center">
-          <h1 className="text-6xl font-bold mb-6">About Wanderlust</h1>
+          <h1 className="text-6xl font-bold mb-6">About SafarSaga</h1>
           <p className="text-2xl max-w-3xl mx-auto leading-relaxed">
             We're passionate about creating extraordinary travel experiences that inspire, educate, and transform lives through the power of exploration.
           </p>
@@ -93,7 +93,7 @@ export default function AboutPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div className="space-y-6">
                 <p className="text-lg text-gray-700 leading-relaxed">
-                  Founded in 2015, Wanderlust began as a small dream to make authentic travel experiences accessible to everyone. What started as a passion project has grown into a trusted travel partner for thousands of adventurers worldwide.
+                  Founded in 2015, SafarSaga began as a small dream to make authentic travel experiences accessible to everyone. What started as a passion project has grown into a trusted travel partner for thousands of adventurers worldwide.
                 </p>
                 <p className="text-lg text-gray-700 leading-relaxed">
                   Our founder, Sarah Johnson, discovered her love for travel during a solo backpacking trip through Southeast Asia. She realized that the most meaningful experiences came from connecting with local cultures and communities, not just visiting famous landmarks.
@@ -208,7 +208,7 @@ export default function AboutPage() {
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold mb-6">Ready to Start Your Journey?</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Join thousands of travelers who trust Wanderlust to create their perfect getaway
+            Join thousands of travelers who trust SafarSaga to create their perfect getaway
           </p>
           <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg">
             Explore Destinations

@@ -101,8 +101,8 @@ export default function ContactPage() {
                     <div>
                       <h3 className="font-semibold text-lg mb-2">Email Us</h3>
                       <p className="text-gray-600">
-                        hello@wanderlusttravel.com<br />
-                        support@wanderlusttravel.com
+                        hello@safarsaga.com<br />
+                        support@safarsaga.com
                       </p>
                     </div>
                   </div>

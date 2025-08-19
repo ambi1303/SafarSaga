@@ -12,7 +12,7 @@ const testimonials = [
     name: 'Sarah Johnson',
     location: 'New York, USA',
     rating: 5,
-    text: 'Wanderlust made our honeymoon in Santorini absolutely perfect. Every detail was handled with care, and the local guide was amazing. Highly recommend!',
+    text: 'SafarSaga made our honeymoon in Santorini absolutely perfect. Every detail was handled with care, and the local guide was amazing. Highly recommend!',
     avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
   },
   {
@@ -20,7 +20,7 @@ const testimonials = [
     name: 'Michael Chen',
     location: 'Toronto, Canada',
     rating: 5,
-    text: 'The African safari was the trip of a lifetime! The accommodations were luxurious and seeing wildlife up close was incredible. Thank you Wanderlust!',
+    text: 'The African safari was the trip of a lifetime! The accommodations were luxurious and seeing wildlife up close was incredible. Thank you SafarSaga!',
     avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
   },
   {

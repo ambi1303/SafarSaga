@@ -27,13 +27,34 @@ const HeroSection = () => {
 
       {/* Content */}
       <div className="relative z-10 text-center text-white px-4 max-w-4xl">
+        <div className="mb-4">
+          <div className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-full text-sm font-bold animate-pulse mb-4">
+            🔥 LIMITED TIME: 25% OFF ALL PACKAGES
+          </div>
+        </div>
+        
         <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in">
-          Discover Your Next
-          <span className="block text-orange-400">Adventure</span>
+          Turn Your Dream Trip Into
+          <span className="block text-orange-400">Reality Today</span>
         </h1>
-        <p className="text-xl md:text-2xl mb-12 text-gray-200 animate-fade-in delay-300">
-          Handpicked travel experiences just for you
+        <p className="text-xl md:text-2xl mb-8 text-gray-200 animate-fade-in delay-300">
+          Join 50,000+ travelers who trusted us with their perfect vacation
         </p>
+        
+        <div className="flex flex-wrap justify-center gap-6 mb-12 text-sm">
+          <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+            <span className="text-green-400">✓</span>
+            <span>No Hidden Fees</span>
+          </div>
+          <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+            <span className="text-green-400">✓</span>
+            <span>24/7 Support</span>
+          </div>
+          <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
+            <span className="text-green-400">✓</span>
+            <span>Money-Back Guarantee</span>
+          </div>
+        </div>
 
         {/* Search Bar */}
         <div className="bg-white/95 backdrop-blur-md rounded-2xl p-6 shadow-2xl animate-fade-in delay-500">
@@ -83,8 +104,8 @@ const HeroSection = () => {
               </Select>
             </div>
 
-            <Button className="h-12 bg-orange-500 hover:bg-orange-600 text-white text-lg font-semibold">
-              Search Adventures
+            <Button className="h-12 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200">
+              🚀 Find My Dream Trip
             </Button>
           </div>
         </div>

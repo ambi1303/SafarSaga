@@ -28,7 +28,7 @@ const WhyChooseUs = () => {
     <section className="py-20 bg-sky-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose Wanderlust?</h2>
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose SafarSaga?</h2>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             We're committed to making your travel dreams come true with exceptional service and unforgettable experiences
           </p>

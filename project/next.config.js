@@ -6,6 +6,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
   images: {
     remotePatterns: [
       {
@@ -13,6 +16,13 @@ const nextConfig = {
         hostname: 'images.pexels.com',
       },
     ],
+  },
+  // Optimize for production
+  swcMinify: true,
+  poweredByHeader: false,
+  // Reduce bundle size
+  experimental: {
+    optimizeCss: true,
   },
 };
 
