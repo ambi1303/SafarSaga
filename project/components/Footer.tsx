@@ -12,9 +12,9 @@ const Footer = () => {
           <div className="sm:col-span-2 lg:col-span-1">
             <Link href="/" className="inline-block group mb-4 sm:mb-6">
               <div className="relative overflow-hidden rounded-lg sm:rounded-xl bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-600 p-3 sm:p-4 transition-all duration-300 group-hover:from-gray-700 group-hover:to-gray-800 group-hover:border-gray-500 group-hover:scale-105 shadow-lg group-hover:shadow-xl">
-                <img 
-                  src="/logo.png.png" 
-                  alt="SafarSaga" 
+                <img
+                  src="/logo.png.png"
+                  alt="SafarSaga"
                   className="h-12 sm:h-16 lg:h-18 w-auto object-contain drop-shadow-md"
                 />
               </div>
@@ -29,9 +29,15 @@ const Footer = () => {
               <Button size="sm" variant="ghost" className="p-2 hover:bg-gray-800 h-9 w-9 sm:h-10 sm:w-10">
                 <Twitter className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
-              <Button size="sm" variant="ghost" className="p-2 hover:bg-gray-800 h-9 w-9 sm:h-10 sm:w-10">
-                <Instagram className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
+              <Link
+                href="https://www.instagram.com/safarsagatrips?utm_source=ig_web_button_share_sheet&igsh=ZTk5eXVtaHd4bDI="
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button size="sm" variant="ghost" className="p-2 hover:bg-gray-800 h-9 w-9 sm:h-10 sm:w-10">
+                  <Instagram className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -41,8 +47,8 @@ const Footer = () => {
             <ul className="space-y-1 sm:space-y-2">
               {['Home', 'Destinations', 'Blog', 'About Us', 'Contact'].map((link) => (
                 <li key={link}>
-                  <Link 
-                    href={`/${link.toLowerCase().replace(' ', '-')}`} 
+                  <Link
+                    href={`/${link.toLowerCase().replace(' ', '-')}`}
                     className="text-gray-400 hover:text-white transition-colors text-sm sm:text-base block py-1"
                   >
                     {link}
@@ -58,8 +64,8 @@ const Footer = () => {
             <ul className="space-y-1 sm:space-y-2">
               {['Adventure Tours', 'Beach Vacations', 'Cultural Trips', 'Honeymoon Packages', 'Group Travel'].map((service) => (
                 <li key={service}>
-                  <Link 
-                    href="#" 
+                  <Link
+                    href="#"
                     className="text-gray-400 hover:text-white transition-colors text-sm sm:text-base block py-1"
                   >
                     {service}
