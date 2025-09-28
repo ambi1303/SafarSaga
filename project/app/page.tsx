@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { FadeIn, ScaleIn } from '@/components/ScrollAnimations';
 import UrgencyBanner from '@/components/UrgencyBanner';
 import HeroSection from '@/components/HeroSection';
 import TrustIndicators from '@/components/TrustIndicators';
@@ -46,14 +47,30 @@ export default function Home() {
     <>
       <UrgencyBanner />
       <HeroSection />
-      <TrustIndicators />
-      <PopularDestinations />
-      <SpecialOffers />
-      <PriceComparison />
-      <VideoTestimonials />
-      <WhyChooseUs />
-      <FAQ />
-      <CTASection />
+      <FadeIn delay={100}>
+        <TrustIndicators />
+      </FadeIn>
+      <FadeIn delay={200}>
+        <PopularDestinations />
+      </FadeIn>
+      <ScaleIn delay={300}>
+        <SpecialOffers />
+      </ScaleIn>
+      <FadeIn delay={400}>
+        <PriceComparison />
+      </FadeIn>
+      <FadeIn delay={500}>
+        <VideoTestimonials />
+      </FadeIn>
+      <ScaleIn delay={600}>
+        <WhyChooseUs />
+      </ScaleIn>
+      <FadeIn delay={700}>
+        <FAQ />
+      </FadeIn>
+      <FadeIn delay={800}>
+        <CTASection />
+      </FadeIn>
       <SocialProof />
     </>
   );
