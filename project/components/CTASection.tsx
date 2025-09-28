@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 
 const CTASection = () => {
   return (
-    <section className="relative py-32 overflow-hidden">
+    <section className="relative py-16 sm:py-20 lg:py-32 overflow-hidden">
       {/* Background Image with Overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center"
@@ -13,28 +13,35 @@ const CTASection = () => {
         <div className="absolute inset-0 bg-sky-900/80"></div>
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 text-center text-white px-4">
+      {/* Content - Mobile Optimized */}
+      <div className="relative z-10 text-center text-white px-3 sm:px-4">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-5xl md:text-6xl font-bold mb-6">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
             Ready for Your Next
-            <span className="block text-orange-400">Adventure?</span>
+            <span className="block text-orange-400 mt-1 sm:mt-2">Adventure?</span>
           </h2>
-          <p className="text-xl md:text-2xl mb-12 text-gray-200 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl mb-8 sm:mb-10 lg:mb-12 text-gray-200 max-w-2xl mx-auto px-2">
             Join thousands of travelers who have trusted us to create their perfect getaway. Your dream destination awaits!
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg">
+          <div className="flex flex-col gap-3 sm:gap-4 justify-center max-w-md sm:max-w-none mx-auto">
+            <Button 
+              size="lg" 
+              className="bg-orange-500 hover:bg-orange-600 text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base lg:text-lg w-full sm:w-auto"
+            >
               Plan Your Trip Today
             </Button>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-gray-900 px-8 py-4 text-lg">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-white text-white hover:bg-white hover:text-gray-900 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base lg:text-lg w-full sm:w-auto"
+            >
               View Our Packages
             </Button>
           </div>
           
-          <div className="mt-12 text-gray-300">
-            <p className="text-sm">
+          <div className="mt-8 sm:mt-10 lg:mt-12 text-gray-300">
+            <p className="text-xs sm:text-sm">
               ⭐ Rated 4.9/5 by over 10,000+ happy travelers
             </p>
           </div>

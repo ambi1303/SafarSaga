@@ -114,44 +114,48 @@ export default function DestinationsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <section className="relative h-64 bg-sky-900 flex items-center">
+      {/* Hero Section - Mobile Optimized */}
+      <section className="relative h-48 sm:h-56 lg:h-64 bg-sky-900 flex items-center">
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-30"
           style={{
             backgroundImage: 'url("https://images.pexels.com/photos/1658967/pexels-photo-1658967.jpeg?auto=compress&cs=tinysrgb&w=1920&h=400&fit=crop")'
           }}
         />
-        <div className="relative z-10 container mx-auto px-4 text-white">
-          <h1 className="text-5xl font-bold mb-4">Explore Destinations</h1>
-          <p className="text-xl">Discover amazing places around the world</p>
+        <div className="relative z-10 container mx-auto px-3 sm:px-4 text-white">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 sm:mb-4">
+            Explore Destinations
+          </h1>
+          <p className="text-sm sm:text-base lg:text-xl">
+            Discover amazing places around the world
+          </p>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-12">
-        <div className="flex gap-8">
-          {/* Mobile Filter Toggle */}
-          <div className="lg:hidden mb-6">
-            <Button 
-              onClick={() => setShowFilters(!showFilters)}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <Filter className="h-4 w-4" />
-              Filters
-            </Button>
-          </div>
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8 lg:py-12">
+        {/* Mobile Filter Toggle */}
+        <div className="lg:hidden mb-4 sm:mb-6">
+          <Button 
+            onClick={() => setShowFilters(!showFilters)}
+            variant="outline"
+            className="flex items-center gap-2 w-full sm:w-auto"
+          >
+            <Filter className="h-4 w-4" />
+            {showFilters ? 'Hide Filters' : 'Show Filters'}
+          </Button>
+        </div>
 
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Filters Sidebar */}
           <aside className={`lg:w-1/4 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <Card className="p-6 sticky top-24">
-              <h3 className="text-xl font-bold mb-6">Filter Destinations</h3>
+            <Card className="p-4 sm:p-6 lg:sticky lg:top-24">
+              <h3 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Filter Destinations</h3>
               
               {/* Destination Type */}
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 <label className="block text-sm font-medium mb-2">Type</label>
                 <Select value={filters.type} onValueChange={(value) => setFilters({...filters, type: value})}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10 sm:h-11">
                     <SelectValue placeholder="All types" />
                   </SelectTrigger>
                   <SelectContent>
@@ -165,7 +169,7 @@ export default function DestinationsPage() {
               </div>
 
               {/* Price Range */}
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 <label className="block text-sm font-medium mb-2">
                   Price Range: ${filters.priceRange[0]} - ${filters.priceRange[1]}
                 </label>
@@ -180,10 +184,10 @@ export default function DestinationsPage() {
               </div>
 
               {/* Duration */}
-              <div className="mb-6">
+              <div className="mb-4 sm:mb-6">
                 <label className="block text-sm font-medium mb-2">Duration</label>
                 <Select value={filters.duration} onValueChange={(value) => setFilters({...filters, duration: value})}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10 sm:h-11">
                     <SelectValue placeholder="All durations" />
                   </SelectTrigger>
                   <SelectContent>
@@ -195,11 +199,11 @@ export default function DestinationsPage() {
                 </Select>
               </div>
 
-              <div className="space-y-3">
-                <Button onClick={applyFilters} className="w-full bg-sky-600 hover:bg-sky-700">
+              <div className="space-y-2 sm:space-y-3">
+                <Button onClick={applyFilters} className="w-full bg-sky-600 hover:bg-sky-700 h-10 sm:h-11">
                   Apply Filters
                 </Button>
-                <Button onClick={resetFilters} variant="outline" className="w-full">
+                <Button onClick={resetFilters} variant="outline" className="w-full h-10 sm:h-11">
                   Reset Filters
                 </Button>
               </div>
@@ -208,50 +212,54 @@ export default function DestinationsPage() {
 
           {/* Destination Grid */}
           <main className="flex-1">
-            <div className="mb-6 flex justify-between items-center">
-              <p className="text-gray-600">
+            <div className="mb-4 sm:mb-6 flex justify-between items-center">
+              <p className="text-gray-600 text-sm sm:text-base">
                 Showing {filteredDestinations.length} destinations
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-4 sm:gap-6 lg:gap-8">
               {filteredDestinations.map((destination) => (
                 <Card key={destination.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer">
                   <div className="relative overflow-hidden">
                     <img
                       src={destination.image}
                       alt={destination.name}
-                      className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300"
+                      className="w-full h-48 sm:h-56 lg:h-64 object-cover group-hover:scale-110 transition-transform duration-300"
                     />
-                    <div className="absolute top-4 right-4 bg-white rounded-full px-3 py-1 flex items-center space-x-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-semibold">{destination.rating}</span>
+                    <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-white rounded-full px-2 sm:px-3 py-1 flex items-center space-x-1 shadow-md">
+                      <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="text-xs sm:text-sm font-semibold">{destination.rating}</span>
                     </div>
                   </div>
                   
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 sm:p-5 lg:p-6">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center text-gray-600">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        <span className="text-sm">{destination.type}</span>
+                        <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        <span className="text-xs sm:text-sm">{destination.type}</span>
                       </div>
-                      <span className="text-sm text-gray-600">{destination.duration} days</span>
+                      <span className="text-xs sm:text-sm text-gray-600">{destination.duration} days</span>
                     </div>
                     
-                    <h3 className="font-bold text-xl mb-2 group-hover:text-sky-600 transition-colors">
+                    <h3 className="font-bold text-base sm:text-lg lg:text-xl mb-2 group-hover:text-sky-600 transition-colors line-clamp-1">
                       {destination.name}
                     </h3>
                     
-                    <p className="text-gray-600 mb-4">
+                    <p className="text-gray-600 mb-4 text-sm sm:text-base line-clamp-2">
                       {destination.description}
                     </p>
                     
-                    <div className="flex items-center justify-between">
-                      <span className="text-3xl font-bold text-sky-600">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-sky-600 flex-shrink-0">
                         ${destination.price}
                       </span>
-                      <Button className="bg-orange-500 hover:bg-orange-600 text-white">
-                        View Package
+                      <Button 
+                        size="sm" 
+                        className="bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm px-3 sm:px-4 flex-shrink-0"
+                      >
+                        <span className="hidden sm:inline">View Package</span>
+                        <span className="sm:hidden">View</span>
                       </Button>
                     </div>
                   </CardContent>
@@ -260,9 +268,11 @@ export default function DestinationsPage() {
             </div>
 
             {filteredDestinations.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-xl text-gray-600">No destinations match your current filters.</p>
-                <Button onClick={resetFilters} className="mt-4" variant="outline">
+              <div className="text-center py-8 sm:py-12">
+                <p className="text-lg sm:text-xl text-gray-600 mb-4">
+                  No destinations match your current filters.
+                </p>
+                <Button onClick={resetFilters} variant="outline" size="sm" className="sm:size-default">
                   Reset Filters
                 </Button>
               </div>

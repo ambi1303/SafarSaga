@@ -26,88 +26,56 @@ const HeroSection = () => {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 text-center text-white px-4 max-w-4xl">
-        <div className="mb-4">
-          <div className="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-full text-sm font-bold animate-pulse mb-4">
-            🔥 LIMITED TIME: 25% OFF ALL PACKAGES
-          </div>
-        </div>
-        
-        <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in">
-          Turn Your Dream Trip Into
-          <span className="block text-orange-400">Reality Today</span>
+      <div className="relative z-10 text-center text-white px-4 max-w-6xl w-full">
+        {/* Main Heading - Minimalist Style */}
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light mb-6 leading-tight tracking-wide">
+          Discover
+          <span className="block font-bold">Extraordinary Places</span>
         </h1>
-        <p className="text-xl md:text-2xl mb-8 text-gray-200 animate-fade-in delay-300">
-          Join 50,000+ travelers who trusted us with their perfect vacation
-        </p>
         
-        <div className="flex flex-wrap justify-center gap-6 mb-12 text-sm">
-          <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
-            <span className="text-green-400">✓</span>
-            <span>No Hidden Fees</span>
+        {/* Subheading */}
+        <p className="text-lg sm:text-xl md:text-2xl mb-12 text-white/90 font-light max-w-3xl mx-auto leading-relaxed">
+          Curated travel experiences for the modern explorer
+        </p>
+
+        {/* Social Proof Metrics */}
+        <div className="flex flex-wrap justify-center gap-8 sm:gap-12 mb-16 text-white/80">
+          <div className="text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-white">50K+</div>
+            <div className="text-sm sm:text-base font-light">Happy Travelers</div>
           </div>
-          <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
-            <span className="text-green-400">✓</span>
-            <span>24/7 Support</span>
+          <div className="text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-white">120+</div>
+            <div className="text-sm sm:text-base font-light">Destinations</div>
           </div>
-          <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full">
-            <span className="text-green-400">✓</span>
-            <span>Money-Back Guarantee</span>
+          <div className="text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-white">4.9</div>
+            <div className="text-sm sm:text-base font-light">Rating</div>
           </div>
         </div>
 
-        {/* Search Bar */}
-        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-6 shadow-2xl animate-fade-in delay-500">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-            <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">Destination</label>
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <Input
-                  placeholder="Where do you want to go?"
-                  className="pl-10 h-12 text-gray-900"
-                  value={searchData.destination}
-                  onChange={(e) => setSearchData({...searchData, destination: e.target.value})}
-                />
-              </div>
-            </div>
+        {/* CTA Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+          <Button 
+            size="lg" 
+            className="bg-white text-gray-900 hover:bg-gray-100 font-medium px-8 py-4 text-base"
+          >
+            Explore Trips
+          </Button>
+          <Button 
+            size="lg" 
+            variant="outline" 
+            className="border-white text-white hover:bg-white hover:text-gray-900 font-medium px-8 py-4 text-base"
+          >
+            Plan Custom Trip
+          </Button>
+        </div>
+      </div>
 
-            <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">Date</label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <Input
-                  type="date"
-                  className="pl-10 h-12 text-gray-900"
-                  value={searchData.date}
-                  onChange={(e) => setSearchData({...searchData, date: e.target.value})}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-gray-700 text-sm font-medium mb-2">Travelers</label>
-              <Select value={searchData.travelers} onValueChange={(value) => setSearchData({...searchData, travelers: value})}>
-                <SelectTrigger className="h-12">
-                  <div className="flex items-center">
-                    <Users className="h-5 w-5 text-gray-400 mr-2" />
-                    <SelectValue placeholder="Select travelers" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 Traveler</SelectItem>
-                  <SelectItem value="2">2 Travelers</SelectItem>
-                  <SelectItem value="3">3 Travelers</SelectItem>
-                  <SelectItem value="4">4 Travelers</SelectItem>
-                  <SelectItem value="5+">5+ Travelers</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button className="h-12 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white text-lg font-semibold shadow-lg transform hover:scale-105 transition-all duration-200">
-              🚀 Find My Dream Trip
-            </Button>
-          </div>
+      {/* Scroll Indicator */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
+          <div className="w-1 h-3 bg-white/50 rounded-full mt-2 animate-pulse"></div>
         </div>
       </div>
     </section>

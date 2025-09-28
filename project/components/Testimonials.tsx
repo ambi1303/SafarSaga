@@ -47,36 +47,44 @@ const Testimonials = () => {
   const currentTestimonial = testimonials[currentIndex];
 
   return (
-    <section className="py-20 bg-gray-900 text-white">
+    <section className="py-16 sm:py-20 lg:py-24 bg-white">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4">What Our Travelers Say</h2>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Don't just take our word for it. Here's what our happy customers have to say about their experiences
+        <div className="text-center mb-12 lg:mb-16">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-light text-gray-900 mb-4">
+            Traveler <span className="font-bold">Stories</span>
+          </h2>
+          <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto font-light">
+            Real experiences from our community of explorers
           </p>
         </div>
 
         <div className="max-w-4xl mx-auto">
-          <Card className="bg-gray-800 border-gray-700">
-            <CardContent className="p-12 text-center">
-              <div className="flex justify-center mb-6">
+          <Card className="bg-gray-50 border-0 shadow-none">
+            <CardContent className="p-8 sm:p-12 lg:p-16 text-center">
+              <div className="flex justify-center mb-6 sm:mb-8">
                 {[...Array(currentTestimonial.rating)].map((_, i) => (
-                  <Star key={i} className="h-6 w-6 fill-yellow-400 text-yellow-400" />
+                  <Star key={i} className="h-5 w-5 sm:h-6 sm:w-6 fill-gray-900 text-gray-900" />
                 ))}
               </div>
               
-              <blockquote className="text-2xl text-gray-100 mb-8 leading-relaxed font-light italic">
+              <blockquote className="text-xl sm:text-2xl lg:text-3xl text-gray-900 mb-8 sm:mb-12 leading-relaxed font-light">
                 "{currentTestimonial.text}"
               </blockquote>
               
-              <div className="flex items-center justify-center space-x-4 mb-8">
-                <Avatar className="h-16 w-16">
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-8">
+                <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
                   <AvatarImage src={currentTestimonial.avatar} />
-                  <AvatarFallback>{currentTestimonial.name.charAt(0)}</AvatarFallback>
+                  <AvatarFallback className="text-xl font-bold bg-gray-200">
+                    {currentTestimonial.name.charAt(0)}
+                  </AvatarFallback>
                 </Avatar>
-                <div>
-                  <h4 className="font-bold text-lg">{currentTestimonial.name}</h4>
-                  <p className="text-gray-400">{currentTestimonial.location}</p>
+                <div className="text-center sm:text-left">
+                  <h4 className="font-bold text-lg sm:text-xl text-gray-900">
+                    {currentTestimonial.name}
+                  </h4>
+                  <p className="text-gray-600 font-light">
+                    {currentTestimonial.location}
+                  </p>
                 </div>
               </div>
               
@@ -85,7 +93,7 @@ const Testimonials = () => {
                   variant="outline"
                   size="sm"
                   onClick={prevTestimonial}
-                  className="border-gray-600 hover:bg-gray-700"
+                  className="border-gray-300 hover:bg-gray-100 h-10 w-10 p-0"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -93,7 +101,7 @@ const Testimonials = () => {
                   variant="outline"
                   size="sm"
                   onClick={nextTestimonial}
-                  className="border-gray-600 hover:bg-gray-700"
+                  className="border-gray-300 hover:bg-gray-100 h-10 w-10 p-0"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -108,7 +116,7 @@ const Testimonials = () => {
             <button
               key={index}
               className={`w-3 h-3 rounded-full transition-colors ${
-                index === currentIndex ? 'bg-sky-400' : 'bg-gray-600'
+                index === currentIndex ? 'bg-gray-900' : 'bg-gray-300'
               }`}
               onClick={() => setCurrentIndex(index)}
             />

@@ -1,34 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MapPin, Users, Award, Globe, Heart, Star } from 'lucide-react';
+import { MapPin, Users, Award, Globe, Heart, Star, Bus, Clock, Phone, Building } from 'lucide-react';
 
-const teamMembers = [
-  {
-    name: 'Sarah Johnson',
-    role: 'Founder & CEO',
-    image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop',
-    bio: 'With 15 years in travel industry, Sarah founded SafarSaga to make extraordinary travel accessible to everyone.'
-  },
-  {
-    name: 'Michael Chen',
-    role: 'Head of Operations',
-    image: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop',
-    bio: 'Michael ensures every trip runs smoothly, coordinating with partners worldwide to deliver seamless experiences.'
-  },
-  {
-    name: 'Emily Rodriguez',
-    role: 'Travel Curator',
-    image: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop',
-    bio: 'Emily handpicks unique destinations and creates unforgettable itineraries based on cultural immersion.'
-  },
-  {
-    name: 'David Kim',
-    role: 'Customer Experience Director',
-    image: 'https://images.pexels.com/photos/846741/pexels-photo-846741.jpeg?auto=compress&cs=tinysrgb&w=300&h=300&fit=crop',
-    bio: 'David leads our customer service team, ensuring every traveler feels supported throughout their journey.'
-  }
-];
+
 
 const stats = [
   { icon: Users, number: '50,000+', label: 'Happy Travelers' },
@@ -63,9 +37,9 @@ const values = [
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <section className="relative h-96 flex items-center">
-        <div 
+      {/* Hero Section - Mobile Optimized */}
+      <section className="relative h-64 sm:h-80 lg:h-96 flex items-center">
+        <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: 'url("https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=1920&h=600&fit=crop")'
@@ -73,100 +47,131 @@ export default function AboutPage() {
         >
           <div className="absolute inset-0 bg-sky-900/80"></div>
         </div>
-        <div className="relative z-10 container mx-auto px-4 text-white text-center">
-          <h1 className="text-6xl font-bold mb-6">About SafarSaga</h1>
-          <p className="text-2xl max-w-3xl mx-auto leading-relaxed">
+        <div className="relative z-10 container mx-auto px-3 sm:px-4 text-white text-center">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-3 sm:mb-4 lg:mb-6">
+            About SafarSaga
+          </h1>
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl max-w-4xl mx-auto leading-relaxed px-2">
             We're passionate about creating extraordinary travel experiences that inspire, educate, and transform lives through the power of exploration.
           </p>
         </div>
       </section>
 
-      {/* Company Story */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl font-bold text-gray-900 mb-6">Our Story</h2>
-              <div className="w-20 h-1 bg-orange-500 mx-auto mb-8"></div>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div className="space-y-6">
-                <p className="text-lg text-gray-700 leading-relaxed">
-                  Founded in 2015, SafarSaga began as a small dream to make authentic travel experiences accessible to everyone. What started as a passion project has grown into a trusted travel partner for thousands of adventurers worldwide.
-                </p>
-                <p className="text-lg text-gray-700 leading-relaxed">
-                  Our founder, Sarah Johnson, discovered her love for travel during a solo backpacking trip through Southeast Asia. She realized that the most meaningful experiences came from connecting with local cultures and communities, not just visiting famous landmarks.
-                </p>
-                <p className="text-lg text-gray-700 leading-relaxed">
-                  Today, we continue that mission by partnering with local guides, supporting community-based tourism, and creating itineraries that go beyond the surface to reveal the heart and soul of each destination.
-                </p>
-              </div>
-              
-              <div className="relative">
-                <img
-                  src="https://images.pexels.com/photos/2506923/pexels-photo-2506923.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop"
-                  alt="Travel collage"
-                  className="rounded-2xl shadow-2xl"
-                />
-                <div className="absolute -bottom-6 -right-6 bg-orange-500 text-white p-6 rounded-2xl">
-                  <div className="text-3xl font-bold">10+</div>
-                  <div className="text-sm">Years of Excellence</div>
+      {/* Welcome Section with Gallery */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-white">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-center">
+              {/* Photo Gallery */}
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-3 sm:space-y-4">
+                  <img
+                    src="https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop"
+                    alt="Mountain adventure with SafarSaga banner"
+                    className="rounded-lg w-full h-32 sm:h-40 object-cover"
+                  />
+                  <img
+                    src="https://images.pexels.com/photos/2506923/pexels-photo-2506923.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop"
+                    alt="Group travel experience"
+                    className="rounded-lg w-full h-32 sm:h-40 object-cover"
+                  />
                 </div>
+                <div className="space-y-3 sm:space-y-4 mt-6">
+                  <img
+                    src="https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop"
+                    alt="Snow mountain expedition"
+                    className="rounded-lg w-full h-32 sm:h-40 object-cover"
+                  />
+                  <img
+                    src="https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop"
+                    alt="Team celebration"
+                    className="rounded-lg w-full h-32 sm:h-40 object-cover"
+                  />
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="space-y-4 sm:space-y-6">
+                <div>
+                  <p className="text-orange-500 font-semibold text-sm sm:text-base mb-2">ABOUT US</p>
+                  <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">
+                    Welcome to <span className="text-orange-500">SafarSaga</span>
+                  </h2>
+                </div>
+
+                <p className="text-sm sm:text-base lg:text-lg text-gray-700 leading-relaxed mb-6">
+                  At SafarSaga, we believe travel is more than just visiting places – it's about creating unforgettable experiences. Whether it's a group adventure, a customized getaway, or a corporate retreat, we ensure every journey is seamless, exciting, and memorable.
+                </p>
+
+                <p className="text-sm sm:text-base lg:text-lg text-gray-700 leading-relaxed mb-6">
+                  From the serene landscapes of Uttarakhand and Himachal to the cultural richness of Rajasthan and J&K, we curate trips that cater to every traveler's dream.
+                </p>
+
+                {/* Features Grid */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-4 w-4 text-orange-500" />
+                    <span className="text-sm text-gray-700">Group & Custom Tours</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-4 w-4 text-orange-500" />
+                    <span className="text-sm text-gray-700">Handpicked Stays</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Bus className="h-4 w-4 text-orange-500" />
+                    <span className="text-sm text-gray-700">Comfortable Transport</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Star className="h-4 w-4 text-orange-500" />
+                    <span className="text-sm text-gray-700">150+ Premium City Tours</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Phone className="h-4 w-4 text-orange-500" />
+                    <span className="text-sm text-gray-700">24/7 Customer Assistance</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Building className="h-4 w-4 text-orange-500" />
+                    <span className="text-sm text-gray-700">Corporate & Luxury Travel</span>
+                  </div>
+                </div>
+
+                <Button className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg">
+                  Read More
+                </Button>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-20 bg-sky-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Impact</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Numbers that reflect our commitment to excellence and customer satisfaction
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {stats.map((stat, index) => {
-              const IconComponent = stat.icon;
-              return (
-                <div key={index} className="text-center">
-                  <div className="bg-white rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <IconComponent className="h-8 w-8 text-sky-600" />
-                  </div>
-                  <div className="text-3xl font-bold text-gray-900 mb-2">{stat.number}</div>
-                  <div className="text-gray-600">{stat.label}</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
 
       {/* Values Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">Our Values</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+      <section className="py-12 sm:py-16 lg:py-20 bg-white">
+        <div className="container mx-auto px-3 sm:px-4">
+          <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4 lg:mb-6">
+              Our Values
+            </h2>
+            <p className="text-sm sm:text-base lg:text-xl text-gray-600 max-w-2xl mx-auto px-2">
               The principles that guide everything we do and every experience we create
             </p>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {values.map((value, index) => {
               const IconComponent = value.icon;
               return (
                 <Card key={index} className="text-center hover:shadow-lg transition-shadow duration-300">
-                  <CardContent className="p-8">
-                    <div className="bg-sky-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
-                      <IconComponent className="h-8 w-8 text-sky-600" />
+                  <CardContent className="p-4 sm:p-6 lg:p-8">
+                    <div className="bg-sky-100 rounded-full w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 flex items-center justify-center mx-auto mb-3 sm:mb-4 lg:mb-6">
+                      <IconComponent className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-sky-600" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">{value.title}</h3>
-                    <p className="text-gray-600 leading-relaxed">{value.description}</p>
+                    <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-2 sm:mb-3 lg:mb-4">
+                      {value.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm lg:text-base text-gray-600 leading-relaxed">
+                      {value.description}
+                    </p>
                   </CardContent>
                 </Card>
               );
@@ -175,42 +180,21 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Team Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">Meet Our Team</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              The passionate travel experts behind your unforgettable experiences
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {teamMembers.map((member, index) => (
-              <Card key={index} className="text-center hover:shadow-xl transition-all duration-300 group">
-                <CardContent className="p-8">
-                  <Avatar className="w-32 h-32 mx-auto mb-6 group-hover:scale-105 transition-transform duration-300">
-                    <AvatarImage src={member.image} alt={member.name} />
-                    <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{member.name}</h3>
-                  <p className="text-sky-600 font-medium mb-4">{member.role}</p>
-                  <p className="text-gray-600 text-sm leading-relaxed">{member.bio}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* CTA Section */}
-      <section className="py-20 bg-sky-900 text-white text-center">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold mb-6">Ready to Start Your Journey?</h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
+      <section className="py-12 sm:py-16 lg:py-20 bg-sky-900 text-white text-center">
+        <div className="container mx-auto px-3 sm:px-4">
+          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 lg:mb-6">
+            Ready to Start Your Journey?
+          </h2>
+          <p className="text-sm sm:text-base lg:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
             Join thousands of travelers who trust SafarSaga to create their perfect getaway
           </p>
-          <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg">
+          <Button
+            size="lg"
+            className="bg-orange-500 hover:bg-orange-600 text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base lg:text-lg"
+          >
             Explore Destinations
           </Button>
         </div>

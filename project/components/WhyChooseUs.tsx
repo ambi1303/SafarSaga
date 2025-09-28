@@ -25,25 +25,31 @@ const features = [
 
 const WhyChooseUs = () => {
   return (
-    <section className="py-20 bg-sky-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose SafarSaga?</h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+    <section className="py-12 sm:py-16 lg:py-20 bg-sky-50">
+      <div className="container mx-auto px-3 sm:px-4">
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+            Why Choose SafarSaga?
+          </h2>
+          <p className="text-sm sm:text-base lg:text-xl text-gray-600 max-w-2xl mx-auto px-2">
             We're committed to making your travel dreams come true with exceptional service and unforgettable experiences
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {features.map((feature, index) => {
             const IconComponent = feature.icon;
             return (
               <div key={index} className="text-center group">
-                <div className="bg-white rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
-                  <IconComponent className="h-10 w-10 text-sky-600" />
+                <div className="bg-white rounded-full w-16 h-16 sm:w-18 sm:h-18 lg:w-20 lg:h-20 flex items-center justify-center mx-auto mb-4 sm:mb-5 lg:mb-6 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
+                  <IconComponent className="h-7 w-7 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-sky-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-4">{feature.title}</h3>
-                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-2 sm:mb-3 lg:mb-4">
+                  {feature.title}
+                </h3>
+                <p className="text-xs sm:text-sm lg:text-base text-gray-600 leading-relaxed px-2">
+                  {feature.description}
+                </p>
               </div>
             );
           })}

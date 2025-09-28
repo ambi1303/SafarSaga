@@ -50,46 +50,48 @@ const offers = [
 
 const SpecialOffers = () => {
   return (
-    <section className="py-20 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">Special Offers</h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+    <section className="py-12 sm:py-16 lg:py-20 bg-white">
+      <div className="container mx-auto px-3 sm:px-4">
+        <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+            Special Offers
+          </h2>
+          <p className="text-sm sm:text-base lg:text-xl text-gray-600 max-w-2xl mx-auto px-2">
             Limited time deals on our most popular travel packages
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {offers.map((offer) => (
             <Card key={offer.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300">
               <div className="relative">
                 <img
                   src={offer.image}
                   alt={offer.title}
-                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-40 sm:h-44 lg:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <Badge className="absolute top-3 left-3 bg-red-500 hover:bg-red-600">
-                  <Tag className="h-3 w-3 mr-1" />
+                <Badge className="absolute top-2 sm:top-3 left-2 sm:left-3 bg-red-500 hover:bg-red-600 text-xs sm:text-sm">
+                  <Tag className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
                   {offer.discount}% OFF
                 </Badge>
               </div>
               
-              <CardContent className="p-5">
-                <h3 className="font-bold text-lg mb-3 group-hover:text-sky-600 transition-colors">
+              <CardContent className="p-3 sm:p-4 lg:p-5">
+                <h3 className="font-bold text-sm sm:text-base lg:text-lg mb-2 sm:mb-3 group-hover:text-sky-600 transition-colors line-clamp-2">
                   {offer.title}
                 </h3>
                 
-                <div className="flex items-center text-gray-600 mb-3">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span className="text-sm">{offer.duration}</span>
+                <div className="flex items-center text-gray-600 mb-2 sm:mb-3">
+                  <Clock className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                  <span className="text-xs sm:text-sm">{offer.duration}</span>
                 </div>
                 
-                <div className="mb-4">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg text-gray-400 line-through">
+                <div className="mb-3 sm:mb-4">
+                  <div className="flex items-center space-x-1 sm:space-x-2">
+                    <span className="text-sm sm:text-base lg:text-lg text-gray-400 line-through">
                       ${offer.originalPrice}
                     </span>
-                    <span className="text-2xl font-bold text-orange-600">
+                    <span className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600">
                       ${offer.discountedPrice}
                     </span>
                   </div>
@@ -102,7 +104,7 @@ const SpecialOffers = () => {
                   </p>
                 </div>
                 
-                <Button className="w-full bg-sky-600 hover:bg-sky-700 text-white">
+                <Button className="w-full bg-sky-600 hover:bg-sky-700 text-white text-xs sm:text-sm py-2 sm:py-2.5">
                   Book Now
                 </Button>
               </CardContent>

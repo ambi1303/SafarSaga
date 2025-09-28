@@ -42,19 +42,22 @@ const UrgencyBanner = () => {
   }, []);
 
   return (
-    <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white py-3 sticky top-0 z-40 shadow-lg">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          {/* Limited Time Offer */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Flame className="h-5 w-5 animate-pulse" />
-              <span className="font-bold">LIMITED TIME: 25% OFF ALL PACKAGES!</span>
+    <div className="bg-gradient-to-r from-red-600 to-orange-600 text-white py-2 sm:py-3 sticky top-0 z-40 shadow-lg">
+      <div className="container mx-auto px-3 sm:px-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
+          {/* Limited Time Offer - Mobile Optimized */}
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Flame className="h-4 w-4 sm:h-5 sm:w-5 animate-pulse" />
+              <span className="font-bold text-xs sm:text-sm lg:text-base">
+                <span className="hidden sm:inline">LIMITED TIME: 25% OFF ALL PACKAGES!</span>
+                <span className="sm:hidden">25% OFF ALL PACKAGES!</span>
+              </span>
             </div>
             
-            <div className="flex items-center gap-2 bg-white/20 px-3 py-1 rounded-full">
-              <Clock className="h-4 w-4" />
-              <span className="font-mono font-bold">
+            <div className="flex items-center gap-1 sm:gap-2 bg-white/20 px-2 sm:px-3 py-1 rounded-full">
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="font-mono font-bold text-xs sm:text-sm">
                 {String(timeLeft.hours).padStart(2, '0')}:
                 {String(timeLeft.minutes).padStart(2, '0')}:
                 {String(timeLeft.seconds).padStart(2, '0')}
@@ -62,18 +65,19 @@ const UrgencyBanner = () => {
             </div>
           </div>
 
-          {/* Social Proof & CTA */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm">
+          {/* Social Proof & CTA - Mobile Optimized */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="hidden sm:flex items-center gap-2 text-sm">
               <Users className="h-4 w-4" />
               <span>{viewersCount} people viewing now</span>
             </div>
             
             <Button 
               size="sm" 
-              className="bg-white text-red-600 hover:bg-gray-100 font-bold animate-pulse"
+              className="bg-white text-red-600 hover:bg-gray-100 font-bold animate-pulse text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2 h-7 sm:h-8"
             >
-              Book Now & Save!
+              <span className="hidden sm:inline">Book Now & Save!</span>
+              <span className="sm:hidden">Book Now!</span>
             </Button>
           </div>
         </div>
