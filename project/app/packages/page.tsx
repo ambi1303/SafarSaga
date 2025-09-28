@@ -538,11 +538,21 @@ export default function PackagesPage() {
               <div className="space-y-4">
                 <div className="flex items-center">
                   <Phone className="h-5 w-5 mr-3" />
-                  <span>+91 9311706027</span>
+                  <a 
+                    href="tel:+919311706027" 
+                    className="hover:text-orange-300 transition-colors"
+                  >
+                    +91 9311706027
+                  </a>
                 </div>
                 <div className="flex items-center">
                   <Mail className="h-5 w-5 mr-3" />
-                  <span>info@safarsaga.com</span>
+                  <a 
+                    href="mailto:info@safarsaga.com" 
+                    className="hover:text-orange-300 transition-colors"
+                  >
+                    info@safarsaga.com
+                  </a>
                 </div>
                 <div className="flex items-center">
                   <MessageCircle className="h-5 w-5 mr-3" />

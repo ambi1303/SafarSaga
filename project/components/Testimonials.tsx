@@ -9,27 +9,27 @@ import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
 const testimonials = [
   {
     id: 1,
-    name: 'Sarah Johnson',
-    location: 'New York, USA',
+    name: 'Priya Sharma',
+    location: 'Delhi, India',
     rating: 5,
-    text: 'SafarSaga made our honeymoon in Santorini absolutely perfect. Every detail was handled with care, and the local guide was amazing. Highly recommend!',
-    avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
+    text: 'Our Manali trip with SafarSaga was absolutely amazing! The snow activities were thrilling and the accommodation was top-notch. Highly recommend for families!',
+    avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
   },
   {
     id: 2,
-    name: 'Michael Chen',
-    location: 'Toronto, Canada',
+    name: 'Rahul Gupta',
+    location: 'Mumbai, India',
     rating: 5,
-    text: 'The African safari was the trip of a lifetime! The accommodations were luxurious and seeing wildlife up close was incredible. Thank you SafarSaga!',
-    avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
+    text: 'Kashmir was truly paradise on earth! The houseboat stay and Gulmarg experience exceeded all expectations. SafarSaga made our dream trip come true!',
+    avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
   },
   {
     id: 3,
-    name: 'Emily Rodriguez',
-    location: 'Barcelona, Spain',
+    name: 'Anjali Patel',
+    location: 'Bangalore, India',
     rating: 5,
-    text: 'From booking to landing back home, everything was seamless. The cultural tour of Japan exceeded all expectations. Will definitely book again!',
-    avatar: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
+    text: 'The Rajasthan heritage tour was incredible! From palaces to desert safari, every moment was magical. Professional service throughout the journey!',
+    avatar: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop'
   }
 ];
 

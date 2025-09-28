@@ -4,7 +4,7 @@ const CTASection = () => {
   return (
     <section className="relative py-16 sm:py-20 lg:py-32 overflow-hidden">
       {/* Background Image with Overlay */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center"
         style={{
           backgroundImage: 'url("https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=1920&h=800&fit=crop")'
@@ -23,23 +23,23 @@ const CTASection = () => {
           <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl mb-8 sm:mb-10 lg:mb-12 text-gray-200 max-w-2xl mx-auto px-2">
             Join thousands of travelers who have trusted us to create their perfect getaway. Your dream destination awaits!
           </p>
-          
+
           <div className="flex flex-col gap-3 sm:gap-4 justify-center max-w-md sm:max-w-none mx-auto">
-            <Button 
-              size="lg" 
+            <Button
+              size="lg"
               className="bg-orange-500 hover:bg-orange-600 text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base lg:text-lg w-full sm:w-auto"
             >
               Plan Your Trip Today
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
+            <Button
+              size="lg"
+              variant="outline"
               className="border-white text-white hover:bg-white hover:text-gray-900 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base lg:text-lg w-full sm:w-auto"
             >
               View Our Packages
             </Button>
           </div>
-          
+
           <div className="mt-8 sm:mt-10 lg:mt-12 text-gray-300">
             <p className="text-xs sm:text-sm">
               ⭐ Rated 4.9/5 by over 10,000+ happy travelers

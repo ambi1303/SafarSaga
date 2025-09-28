@@ -163,9 +163,25 @@ export default function ContactPage() {
                           <h3 className="font-semibold text-lg text-gray-900 mb-2">
                             {info.title}
                           </h3>
-                          <p className="text-gray-600">
-                            {info.content}
-                          </p>
+                          {info.title === 'Call Us' ? (
+                            <a 
+                              href="tel:+919311706027" 
+                              className="text-gray-600 hover:text-orange-500 transition-colors"
+                            >
+                              {info.content}
+                            </a>
+                          ) : info.title === 'Email Us' ? (
+                            <a 
+                              href="mailto:safarsagatrips@gmail.com" 
+                              className="text-gray-600 hover:text-orange-500 transition-colors"
+                            >
+                              {info.content}
+                            </a>
+                          ) : (
+                            <p className="text-gray-600">
+                              {info.content}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </Card>
@@ -352,21 +368,25 @@ export default function ContactPage() {
               Call us now for instant support and travel guidance
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                className="bg-white text-orange-500 hover:bg-gray-100 font-medium"
-              >
-                <Phone className="h-5 w-5 mr-2" />
-                Call +91 9311706027
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-white text-white hover:bg-white hover:text-orange-500 font-medium"
-              >
-                <MessageCircle className="h-5 w-5 mr-2" />
-                WhatsApp Chat
-              </Button>
+              <a href="tel:+919311706027">
+                <Button 
+                  size="lg" 
+                  className="bg-white text-orange-500 hover:bg-gray-100 font-medium w-full"
+                >
+                  <Phone className="h-5 w-5 mr-2" />
+                  Call +91 9311706027
+                </Button>
+              </a>
+              <a href="https://wa.me/919311706027?text=Hello! I would like to know more about your travel packages." target="_blank" rel="noopener noreferrer">
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-white text-white hover:bg-white hover:text-orange-500 font-medium w-full"
+                >
+                  <MessageCircle className="h-5 w-5 mr-2" />
+                  WhatsApp Chat
+                </Button>
+              </a>
             </div>
           </Card>
         </FadeIn>

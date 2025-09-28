@@ -63,23 +63,29 @@ const Footer = () => {
               </div>
               <div className="flex items-center">
                 <Phone className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
-                <div className="text-gray-400 text-sm">
+                <a
+                  href="tel:+919311706027"
+                  className="text-gray-400 text-sm hover:text-white transition-colors"
+                >
                   +91 9311706027
-                </div>
+                </a>
               </div>
               <div className="flex items-center">
                 <Mail className="h-5 w-5 text-gray-400 mr-3 flex-shrink-0" />
-                <div className="text-gray-400 text-sm">
+                <a
+                  href="mailto:safarsaga@gmail.com"
+                  className="text-gray-400 text-sm hover:text-white transition-colors"
+                >
                   safarsaga@gmail.com
-                </div>
+                </a>
               </div>
             </div>
 
             {/* Social Media Icons */}
             <div className="flex space-x-3 mt-6">
-              <Link 
-                href="https://www.instagram.com/safarsagatrips?utm_source=ig_web_button_share_sheet&igsh=ZTk5eXVtaHd4bDI=" 
-                target="_blank" 
+              <Link
+                href="https://www.instagram.com/safarsagatrips?utm_source=ig_web_button_share_sheet&igsh=ZTk5eXVtaHd4bDI="
+                target="_blank"
                 rel="noopener noreferrer"
               >
                 <Button size="sm" variant="ghost" className="p-2 hover:bg-gray-700 h-10 w-10 rounded-full bg-gray-800">

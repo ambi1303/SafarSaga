@@ -3,22 +3,23 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Shield, Award, Users, Clock, Star, CheckCircle } from 'lucide-react';
+import { FadeIn, StaggerContainer } from '@/components/ScrollAnimations';
 
 const TrustIndicators = () => {
   const stats = [
-    { icon: Users, number: '50,000+', label: 'Happy Travelers', color: 'text-blue-600' },
-    { icon: Award, number: '15+', label: 'Years Experience', color: 'text-orange-600' },
-    { icon: Star, number: '4.9/5', label: 'Customer Rating', color: 'text-yellow-600' },
-    { icon: Shield, number: '100%', label: 'Secure Booking', color: 'text-green-600' },
+    { icon: Users, number: '2,500+', label: 'Happy Travelers', color: 'text-blue-600' },
+    { icon: Award, number: '50+', label: 'Destinations Covered', color: 'text-orange-600' },
+    { icon: Star, number: '4.8/5', label: 'Customer Rating', color: 'text-yellow-600' },
+    { icon: Clock, number: '24/7', label: 'Customer Support', color: 'text-green-600' },
   ];
 
   const certifications = [
-    'IATA Certified',
-    'ISO 9001:2015',
-    'TripAdvisor Excellence',
-    'BBB A+ Rating',
+    'Government Approved',
+    'IATO Member',
     'Secure Payment Gateway',
-    '24/7 Customer Support'
+    'Best Price Guarantee',
+    'Expert Local Guides',
+    'Customized Itineraries'
   ];
 
   return (
@@ -27,7 +28,15 @@ const TrustIndicators = () => {
         {/* Trust Stats - Mobile Optimized */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-8 sm:mb-10 lg:mb-12">
           {stats.map((stat, index) => (
-            <Card key={index} className="text-center hover:shadow-lg transition-shadow duration-300 border-0 bg-white/80 backdrop-blur-sm">
+            <Card 
+              key={index} 
+              className="text-center hover:shadow-lg transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm"
+              style={{ 
+                animationDelay: `${index * 100}ms`,
+                opacity: 0,
+                animation: 'fadeInUp 0.6s ease-out forwards'
+              }}
+            >
               <CardContent className="p-3 sm:p-4 lg:p-6">
                 <stat.icon className={`h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 mx-auto mb-2 sm:mb-3 ${stat.color}`} />
                 <div className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-1">{stat.number}</div>
@@ -42,7 +51,16 @@ const TrustIndicators = () => {
           <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Trusted & Certified</h3>
           <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
             {certifications.map((cert, index) => (
-              <Badge key={index} variant="outline" className="px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-white/80 border-gray-300 text-gray-700 hover:bg-white transition-colors text-xs sm:text-sm">
+              <Badge 
+                key={index} 
+                variant="outline" 
+                className="px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 bg-white/80 border-gray-300 text-gray-700 hover:bg-orange-50 hover:border-orange-300 hover:text-orange-700 transition-all duration-200 text-xs sm:text-sm"
+                style={{ 
+                  animationDelay: `${index * 50}ms`,
+                  opacity: 0,
+                  animation: 'fadeIn 0.5s ease-out forwards'
+                }}
+              >
                 <CheckCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1 sm:mr-2 text-green-600" />
                 <span className="whitespace-nowrap">{cert}</span>
               </Badge>
