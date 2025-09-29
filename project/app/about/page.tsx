@@ -1,15 +1,8 @@
+'use client';
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { MapPin, Users, Award, Globe, Heart, Star, Bus, Clock, Phone, Building } from 'lucide-react';
-
-
-
-const stats = [
-  { icon: Users, number: '50,000+', label: 'Happy Travelers' },
-  { icon: MapPin, number: '120+', label: 'Destinations' },
-  { icon: Award, number: '25+', label: 'Awards Won' },
-  { icon: Star, number: '4.9', label: 'Average Rating' }
-];
+import { MapPin, Users, Award, Globe, Heart, Star, Bus, Phone, Building } from 'lucide-react';
 
 const values = [
   {
@@ -42,7 +35,7 @@ export default function AboutPage() {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: 'url("https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=1920&h=600&fit=crop")'
+            backgroundImage: 'url("https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg?auto=compress&cs=tinysrgb&w=1920&h=600&fit=crop")'
           }}
         >
           <div className="absolute inset-0 bg-sky-900/80"></div>
@@ -66,26 +59,42 @@ export default function AboutPage() {
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-3 sm:space-y-4">
                   <img
-                    src="https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop"
-                    alt="Mountain adventure with SafarSaga banner"
-                    className="rounded-lg w-full h-32 sm:h-40 object-cover"
+                    src="/images/gallery/manali-kasol.JPG"
+                    alt="Manali Kasol adventure experiences"
+                    className="rounded-lg w-full h-32 sm:h-40 object-cover hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop";
+                    }}
                   />
                   <img
-                    src="https://images.pexels.com/photos/2506923/pexels-photo-2506923.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop"
-                    alt="Group travel experience"
-                    className="rounded-lg w-full h-32 sm:h-40 object-cover"
+                    src="/images/gallery/jibli.JPG"
+                    alt="Jibhi beautiful landscapes"
+                    className="rounded-lg w-full h-32 sm:h-40 object-cover hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "https://images.pexels.com/photos/2506923/pexels-photo-2506923.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop";
+                    }}
                   />
                 </div>
                 <div className="space-y-3 sm:space-y-4 mt-6">
                   <img
-                    src="https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop"
-                    alt="Snow mountain expedition"
-                    className="rounded-lg w-full h-32 sm:h-40 object-cover"
+                    src="/images/gallery/chopta-1.JPG"
+                    alt="Chopta memorable travel moments"
+                    className="rounded-lg w-full h-32 sm:h-40 object-cover hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop";
+                    }}
                   />
                   <img
-                    src="https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop"
-                    alt="Team celebration"
-                    className="rounded-lg w-full h-32 sm:h-40 object-cover"
+                    src="/images/gallery/chakrata.JPG"
+                    alt="Chakrata amazing travel experiences"
+                    className="rounded-lg w-full h-32 sm:h-40 object-cover hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.src = "https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=400&h=300&fit=crop";
+                    }}
                   />
                 </div>
               </div>

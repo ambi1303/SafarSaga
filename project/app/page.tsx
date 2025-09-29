@@ -1,5 +1,4 @@
 import HeroSection from '@/components/HeroSection';
-import TrustIndicators from '@/components/TrustIndicators';
 import PopularDestinations from '@/components/PopularDestinations';
 import Gallery from '@/components/Gallery';
 import UpcomingTrips from '@/components/UpcomingTrips';
@@ -12,7 +11,6 @@ export default function Home() {
   return (
     <>
       <HeroSection />
-      <TrustIndicators />
       <PopularDestinations />
       <Gallery />
       <UpcomingTrips />
