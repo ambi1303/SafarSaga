@@ -340,18 +340,53 @@ export default function ContactPage() {
             </div>
             
             <Card className="overflow-hidden">
-              <div className="h-96 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                <div className="text-center text-gray-600 p-8">
-                  <MapPin className="h-16 w-16 mx-auto mb-4 text-orange-500" />
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    Interactive Map
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Jaipur extn ishmalpur road new delhi-110044
-                  </p>
-                  <Button className="bg-orange-500 hover:bg-orange-600">
-                    Get Directions
-                  </Button>
+              <div className="relative h-96 lg:h-[500px]">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3507.8234567890123!2d77.3123456789!3d28.4987654321!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce626851f7009%3A0x621185133cdf47ed!2sTajpur%20Rd%2C%20Badarpur%20Extension%2C%20Tajpur%2C%20New%20Delhi%2C%20Delhi%20110044!5e0!3m2!1sen!2sin!4v1234567890123!5m2!1sen!2sin"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="SafarSaga Office Location"
+                  className="w-full h-full"
+                />
+                
+                {/* Overlay with office details */}
+                <div className="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-lg p-4 shadow-lg max-w-sm">
+                  <div className="flex items-start space-x-3">
+                    <div className="bg-orange-100 rounded-full p-2">
+                      <MapPin className="h-5 w-5 text-orange-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 mb-1">SafarSaga Office</h3>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Shop no 3 basement, Plot no 1,<br />
+                        Tajpur Rd, Badarpur Extension,<br />
+                        Tajpur, badarpur border,<br />
+                        New Delhi, Delhi 110044
+                      </p>
+                      <div className="flex items-center text-xs text-gray-500">
+                        <Clock className="h-3 w-3 mr-1" />
+                        Mon - Sat: 9:00 AM - 7:00 PM
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Get Directions Button */}
+                <div className="absolute bottom-4 right-4">
+                  <a
+                    href="https://www.google.com/maps/dir/?api=1&destination=Shop+no+3+basement,+Plot+no+1,Tajpur+Rd,+Badarpur+Extension,Tajpur,+badarpur+border,+New+Delhi,+Delhi+110044"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button className="bg-orange-500 hover:bg-orange-600 text-white shadow-lg">
+                      <MapPin className="h-4 w-4 mr-2" />
+                      Get Directions
+                    </Button>
+                  </a>
                 </div>
               </div>
             </Card>

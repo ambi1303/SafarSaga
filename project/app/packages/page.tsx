@@ -20,97 +20,127 @@ import {
   MessageCircle
 } from 'lucide-react';
 
-// Sample package data
+// Travel package data
 const packages = [
   {
     id: 1,
-    name: "Manali Adventure 2N/3D",
-    destination: "Manali",
-    price: 8999,
-    originalPrice: 12999,
+    name: "Manali & Kasol 2N/3D",
+    destination: "Manali & Kasol",
+    price: 5499,
+    originalPrice: 7999,
     duration: "2N/3D",
     groupSize: "4-8 people",
     image: "https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop",
-    description: "Escape to the mountains with snow adventures",
-    highlights: ["Snow Activities", "Mountain Views", "Adventure Sports"],
+    description: "Experience the beauty of Himachal with snow-capped mountains and serene valleys",
+    highlights: ["Snow Activities", "Valley Views", "Local Culture", "Adventure Sports"],
     rating: 4.8,
     reviews: 124,
     category: "adventure"
   },
   {
     id: 2,
-    name: "Goa Beach Paradise 3N/4D",
-    destination: "Goa",
-    price: 12999,
-    originalPrice: 16999,
-    duration: "3N/4D",
+    name: "Chakrata 1N/2D",
+    destination: "Chakrata",
+    price: 4999,
+    originalPrice: 6499,
+    duration: "1N/2D",
     groupSize: "2-6 people",
-    image: "https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop",
-    description: "Sun, sand, and endless beach vibes",
-    highlights: ["Beach Activities", "Water Sports", "Nightlife"],
-    rating: 4.9,
+    image: "https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop",
+    description: "Peaceful hill station getaway with pristine nature and tranquil environment",
+    highlights: ["Nature Walks", "Tiger Falls", "Peaceful Environment", "Hill Station"],
+    rating: 4.7,
     reviews: 89,
-    category: "beach"
+    category: "nature"
   },
   {
     id: 3,
-    name: "Rajasthan Heritage 4N/5D",
-    destination: "Rajasthan",
-    price: 15999,
-    originalPrice: 19999,
-    duration: "4N/5D",
-    groupSize: "6-12 people",
-    image: "https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop",
-    description: "Explore royal palaces and desert culture",
-    highlights: ["Palace Tours", "Desert Safari", "Cultural Shows"],
-    rating: 4.7,
+    name: "Jibhi 2N/3D",
+    destination: "Jibhi",
+    price: 5499,
+    originalPrice: 7499,
+    duration: "2N/3D",
+    groupSize: "4-8 people",
+    image: "https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop",
+    description: "Hidden gem of Himachal with untouched natural beauty and serenity",
+    highlights: ["Waterfall Trek", "Forest Walks", "Local Villages", "Photography"],
+    rating: 4.9,
     reviews: 156,
-    category: "cultural"
+    category: "nature"
   },
   {
     id: 4,
-    name: "Kashmir Valley 5N/6D",
-    destination: "Kashmir",
-    price: 22999,
-    originalPrice: 28999,
-    duration: "5N/6D",
+    name: "Chopta 2N/3D",
+    destination: "Chopta",
+    price: 5499,
+    originalPrice: 7299,
+    duration: "2N/3D",
     groupSize: "4-10 people",
-    image: "https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop",
-    description: "Paradise on earth with stunning landscapes",
-    highlights: ["Houseboat Stay", "Shikara Rides", "Valley Views"],
-    rating: 4.9,
+    image: "https://images.pexels.com/photos/1591447/pexels-photo-1591447.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop",
+    description: "Mini Switzerland of India with breathtaking meadows and mountain views",
+    highlights: ["Tungnath Trek", "Chandrashila Peak", "Meadows", "Mountain Views"],
+    rating: 4.8,
     reviews: 203,
-    category: "nature"
+    category: "adventure"
   },
   {
     id: 5,
-    name: "Himachal Hill Station 3N/4D",
-    destination: "Shimla",
-    price: 9999,
-    originalPrice: 13999,
-    duration: "3N/4D",
+    name: "Udaipur 2N/3D",
+    destination: "Udaipur",
+    price: 5999,
+    originalPrice: 8499,
+    duration: "2N/3D",
     groupSize: "2-8 people",
-    image: "https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop",
-    description: "Cool mountain breeze and scenic beauty",
-    highlights: ["Toy Train", "Mall Road", "Mountain Views"],
-    rating: 4.6,
-    reviews: 98,
-    category: "nature"
+    image: "https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop",
+    description: "City of Lakes with royal palaces and rich cultural heritage",
+    highlights: ["City Palace", "Lake Pichola", "Boat Rides", "Royal Heritage"],
+    rating: 4.9,
+    reviews: 198,
+    category: "cultural"
   },
   {
     id: 6,
-    name: "Kerala Backwaters 4N/5D",
-    destination: "Kerala",
-    price: 18999,
-    originalPrice: 23999,
-    duration: "4N/5D",
-    groupSize: "2-6 people",
-    image: "https://images.pexels.com/photos/2506923/pexels-photo-2506923.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop",
-    description: "Serene backwaters and tropical paradise",
-    highlights: ["Houseboat Cruise", "Ayurveda Spa", "Spice Gardens"],
+    name: "Auli 2N/3D",
+    destination: "Auli",
+    price: 6999,
+    originalPrice: 9499,
+    duration: "2N/3D",
+    groupSize: "4-8 people",
+    image: "https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop",
+    description: "Skiing paradise with panoramic Himalayan views and adventure activities",
+    highlights: ["Skiing", "Cable Car", "Himalayan Views", "Adventure Sports"],
     rating: 4.8,
     reviews: 167,
-    category: "nature"
+    category: "adventure"
+  },
+  {
+    id: 7,
+    name: "Jaisalmer 2N/3D",
+    destination: "Jaisalmer",
+    price: 5499,
+    originalPrice: 7799,
+    duration: "2N/3D",
+    groupSize: "4-10 people",
+    image: "https://images.pexels.com/photos/1010657/pexels-photo-1010657.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop",
+    description: "Golden city with magnificent forts, desert safaris and cultural experiences",
+    highlights: ["Desert Safari", "Jaisalmer Fort", "Camel Rides", "Cultural Shows"],
+    rating: 4.7,
+    reviews: 142,
+    category: "cultural"
+  },
+  {
+    id: 8,
+    name: "Manali & Kasol 3N/4D",
+    destination: "Manali & Kasol",
+    price: 5999,
+    originalPrice: 8799,
+    duration: "3N/4D",
+    groupSize: "4-8 people",
+    image: "https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop",
+    description: "Extended Himachal experience with more time to explore the beautiful valleys",
+    highlights: ["Extended Stay", "Multiple Destinations", "Adventure Activities", "Local Culture"],
+    rating: 4.9,
+    reviews: 186,
+    category: "adventure"
   }
 ];
 
@@ -194,11 +224,11 @@ export default function PackagesPage() {
 
     if (price !== 'all') {
       if (price === 'low') {
-        filtered = filtered.filter(pkg => pkg.price < 15000);
+        filtered = filtered.filter(pkg => pkg.price < 6000);
       } else if (price === 'medium') {
-        filtered = filtered.filter(pkg => pkg.price >= 15000 && pkg.price < 25000);
+        filtered = filtered.filter(pkg => pkg.price >= 6000 && pkg.price < 7000);
       } else if (price === 'high') {
-        filtered = filtered.filter(pkg => pkg.price >= 25000);
+        filtered = filtered.filter(pkg => pkg.price >= 7000);
       }
     }
 
@@ -261,9 +291,9 @@ export default function PackagesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Prices</SelectItem>
-                <SelectItem value="low">Under ₹15,000</SelectItem>
-                <SelectItem value="medium">₹15,000 - ₹25,000</SelectItem>
-                <SelectItem value="high">Above ₹25,000</SelectItem>
+                <SelectItem value="low">Under ₹6,000</SelectItem>
+                <SelectItem value="medium">₹6,000 - ₹7,000</SelectItem>
+                <SelectItem value="high">Above ₹7,000</SelectItem>
               </SelectContent>
             </Select>
           </div>

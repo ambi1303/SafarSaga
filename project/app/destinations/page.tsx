@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   MapPin, 
   Star, 
-  Filter, 
   Search, 
   Calendar, 
   Users, 
@@ -26,139 +25,139 @@ import {
 const destinations = [
   {
     id: 1,
-    name: 'Manali Adventure',
+    name: 'Manali & Kasol 2N/3D',
     location: 'Himachal Pradesh',
-    type: 'Mountain',
-    price: 12999,
-    originalPrice: 16999,
-    duration: '3N/4D',
+    type: 'Adventure',
+    price: 5499,
+    originalPrice: 7999,
+    duration: '2N/3D',
     rating: 4.8,
-    reviews: 245,
+    reviews: 124,
     image: 'https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-    description: 'Experience snow-capped mountains, adventure sports, and scenic valleys',
-    highlights: ['Solang Valley', 'Rohtang Pass', 'Adventure Sports'],
+    description: 'Experience the beauty of Himachal with snow-capped mountains and serene valleys',
+    highlights: ['Snow Activities', 'Valley Views', 'Local Culture'],
     bestTime: 'Oct-Feb',
     groupSize: '4-8 people',
     featured: true
   },
   {
     id: 2,
-    name: 'Kashmir Paradise',
-    location: 'Jammu & Kashmir',
+    name: 'Chakrata 1N/2D',
+    location: 'Uttarakhand',
     type: 'Nature',
-    price: 22999,
-    originalPrice: 28999,
-    duration: '5N/6D',
-    rating: 4.9,
-    reviews: 189,
-    image: 'https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-    description: 'Heaven on earth with pristine lakes, houseboats, and snow-capped peaks',
-    highlights: ['Dal Lake', 'Gulmarg', 'Pahalgam'],
-    bestTime: 'Apr-Oct',
+    price: 4999,
+    originalPrice: 6499,
+    duration: '1N/2D',
+    rating: 4.7,
+    reviews: 89,
+    image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
+    description: 'Peaceful hill station getaway with pristine nature and tranquil environment',
+    highlights: ['Nature Walks', 'Tiger Falls', 'Peaceful Environment'],
+    bestTime: 'Mar-Jun',
     groupSize: '2-6 people',
-    featured: true
+    featured: false
   },
   {
     id: 3,
-    name: 'Rajasthan Royal',
-    location: 'Rajasthan',
-    type: 'Cultural',
-    price: 18999,
-    originalPrice: 24999,
-    duration: '4N/5D',
-    rating: 4.7,
-    reviews: 312,
-    image: 'https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-    description: 'Explore magnificent palaces, forts, and rich cultural heritage',
-    highlights: ['City Palace', 'Amber Fort', 'Desert Safari'],
-    bestTime: 'Oct-Mar',
-    groupSize: '6-12 people',
-    featured: false
-  },
-  {
-    id: 4,
-    name: 'Goa Beach Bliss',
-    location: 'Goa',
-    type: 'Beach',
-    price: 15999,
-    originalPrice: 19999,
-    duration: '4N/5D',
-    rating: 4.6,
-    reviews: 278,
-    image: 'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-    description: 'Pristine beaches, water sports, and vibrant nightlife',
-    highlights: ['Beach Activities', 'Water Sports', 'Nightlife'],
-    bestTime: 'Nov-Feb',
-    groupSize: '2-8 people',
-    featured: false
-  },
-  {
-    id: 5,
-    name: 'Kerala Backwaters',
-    location: 'Kerala',
+    name: 'Jibhi 2N/3D',
+    location: 'Himachal Pradesh',
     type: 'Nature',
-    price: 19999,
-    originalPrice: 25999,
-    duration: '5N/6D',
-    rating: 4.8,
-    reviews: 167,
-    image: 'https://images.pexels.com/photos/2506923/pexels-photo-2506923.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-    description: 'Serene backwaters, lush greenery, and traditional houseboats',
-    highlights: ['Houseboat Cruise', 'Tea Gardens', 'Ayurveda'],
-    bestTime: 'Sep-Mar',
-    groupSize: '2-6 people',
-    featured: true
-  },
-  {
-    id: 6,
-    name: 'Ladakh Expedition',
-    location: 'Ladakh',
-    type: 'Adventure',
-    price: 35999,
-    originalPrice: 42999,
-    duration: '7N/8D',
+    price: 5499,
+    originalPrice: 7499,
+    duration: '2N/3D',
     rating: 4.9,
-    reviews: 98,
-    image: 'https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-    description: 'High altitude desert, pristine lakes, and ancient monasteries',
-    highlights: ['Pangong Lake', 'Nubra Valley', 'Monasteries'],
-    bestTime: 'May-Sep',
+    reviews: 156,
+    image: 'https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
+    description: 'Hidden gem of Himachal with untouched natural beauty and serenity',
+    highlights: ['Waterfall Trek', 'Forest Walks', 'Local Villages'],
+    bestTime: 'Apr-Oct',
     groupSize: '4-8 people',
     featured: true
   },
   {
-    id: 7,
-    name: 'Uttarakhand Hills',
+    id: 4,
+    name: 'Chopta 2N/3D',
     location: 'Uttarakhand',
-    type: 'Mountain',
-    price: 14999,
-    originalPrice: 18999,
-    duration: '4N/5D',
-    rating: 4.5,
-    reviews: 134,
-    image: 'https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-    description: 'Spiritual journey through hill stations and holy temples',
-    highlights: ['Rishikesh', 'Haridwar', 'Mussoorie'],
-    bestTime: 'Mar-Jun',
+    type: 'Adventure',
+    price: 5499,
+    originalPrice: 7299,
+    duration: '2N/3D',
+    rating: 4.8,
+    reviews: 203,
+    image: 'https://images.pexels.com/photos/1591447/pexels-photo-1591447.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
+    description: 'Mini Switzerland of India with breathtaking meadows and mountain views',
+    highlights: ['Tungnath Trek', 'Chandrashila Peak', 'Meadows'],
+    bestTime: 'Apr-Nov',
+    groupSize: '4-10 people',
+    featured: true
+  },
+  {
+    id: 5,
+    name: 'Udaipur 2N/3D',
+    location: 'Rajasthan',
+    type: 'Cultural',
+    price: 5999,
+    originalPrice: 8499,
+    duration: '2N/3D',
+    rating: 4.9,
+    reviews: 198,
+    image: 'https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
+    description: 'City of Lakes with royal palaces and rich cultural heritage',
+    highlights: ['City Palace', 'Lake Pichola', 'Boat Rides'],
+    bestTime: 'Oct-Mar',
+    groupSize: '2-8 people',
+    featured: true
+  },
+  {
+    id: 6,
+    name: 'Auli 2N/3D',
+    location: 'Uttarakhand',
+    type: 'Adventure',
+    price: 6999,
+    originalPrice: 9499,
+    duration: '2N/3D',
+    rating: 4.8,
+    reviews: 167,
+    image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
+    description: 'Skiing paradise with panoramic Himalayan views and adventure activities',
+    highlights: ['Skiing', 'Cable Car', 'Himalayan Views'],
+    bestTime: 'Dec-Mar',
+    groupSize: '4-8 people',
+    featured: false
+  },
+  {
+    id: 7,
+    name: 'Jaisalmer 2N/3D',
+    location: 'Rajasthan',
+    type: 'Cultural',
+    price: 5499,
+    originalPrice: 7799,
+    duration: '2N/3D',
+    rating: 4.7,
+    reviews: 142,
+    image: 'https://images.pexels.com/photos/1010657/pexels-photo-1010657.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
+    description: 'Golden city with magnificent forts, desert safaris and cultural experiences',
+    highlights: ['Desert Safari', 'Jaisalmer Fort', 'Camel Rides'],
+    bestTime: 'Oct-Mar',
     groupSize: '4-10 people',
     featured: false
   },
   {
     id: 8,
-    name: 'Andaman Islands',
-    location: 'Andaman & Nicobar',
-    type: 'Beach',
-    price: 28999,
-    originalPrice: 35999,
-    duration: '6N/7D',
-    rating: 4.7,
-    reviews: 156,
-    image: 'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-    description: 'Pristine beaches, coral reefs, and crystal clear waters',
-    highlights: ['Radhanagar Beach', 'Scuba Diving', 'Island Hopping'],
-    bestTime: 'Oct-May',
-    groupSize: '2-6 people',
-    featured: false
+    name: 'Manali & Kasol 3N/4D',
+    location: 'Himachal Pradesh',
+    type: 'Adventure',
+    price: 5999,
+    originalPrice: 8799,
+    duration: '3N/4D',
+    rating: 4.9,
+    reviews: 186,
+    image: 'https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
+    description: 'Extended Himachal experience with more time to explore the beautiful valleys',
+    highlights: ['Extended Stay', 'Multiple Destinations', 'Adventure Activities'],
+    bestTime: 'Oct-Feb',
+    groupSize: '4-8 people',
+    featured: true
   }
 ];
 
@@ -218,11 +217,11 @@ export default function DestinationsPage() {
     // Price filter
     if (price !== 'all') {
       if (price === 'budget') {
-        filtered = filtered.filter(dest => dest.price < 20000);
+        filtered = filtered.filter(dest => dest.price < 6000);
       } else if (price === 'mid') {
-        filtered = filtered.filter(dest => dest.price >= 20000 && dest.price < 30000);
+        filtered = filtered.filter(dest => dest.price >= 6000 && dest.price < 7000);
       } else if (price === 'luxury') {
-        filtered = filtered.filter(dest => dest.price >= 30000);
+        filtered = filtered.filter(dest => dest.price >= 7000);
       }
     }
 
@@ -243,7 +242,7 @@ export default function DestinationsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="relative h-96 lg:h-[500px] flex items-center justify-center">
+      <section className="relative h-80 sm:h-96 lg:h-[500px] flex items-center justify-center overflow-hidden">
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -252,36 +251,36 @@ export default function DestinationsPage() {
         >
           <div className="absolute inset-0 bg-black/50"></div>
         </div>
-        <div className="relative z-10 text-center text-white px-4">
+        <div className="relative z-10 text-center text-white w-full max-w-4xl mx-auto">
           <div className="inline-flex items-center bg-orange-500/20 text-orange-200 px-4 py-2 rounded-full text-sm font-medium mb-4">
             <MapPin className="h-4 w-4 mr-2" />
             EXPLORE DESTINATIONS
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 px-4">
             Discover <span className="text-orange-400">Incredible India</span>
           </h1>
-          <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base md:text-lg lg:text-xl mb-6 lg:mb-8 max-w-2xl mx-auto px-4">
             From snow-capped mountains to pristine beaches, explore the diverse beauty of India
           </p>
           
           {/* Search Bar */}
-          <div className="max-w-md mx-auto relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+          <div className="max-w-sm lg:max-w-md mx-auto relative px-4 lg:px-0">
+            <Search className="absolute left-6 lg:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4 lg:h-5 lg:w-5" />
             <Input
               placeholder="Search destinations..."
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
-              className="pl-10 pr-4 py-3 bg-white/90 border-0 rounded-full text-gray-900"
+              className="pl-10 lg:pl-10 pr-4 py-2 lg:py-3 bg-white/90 border-0 rounded-full text-gray-900 text-sm lg:text-base w-full"
             />
           </div>
         </div>
       </section>
 
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-8 lg:py-12">
         {/* Category Filters */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">Browse by Category</h2>
-          <div className="flex flex-wrap justify-center gap-4">
+        <div className="mb-8 lg:mb-12">
+          <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-4 lg:mb-6 text-center">Browse by Category</h2>
+          <div className="flex flex-wrap justify-center gap-2 lg:gap-4">
             {categories.map((category) => {
               const IconComponent = category.icon;
               return (
@@ -289,14 +288,15 @@ export default function DestinationsPage() {
                   key={category.id}
                   onClick={() => handleCategoryFilter(category.id)}
                   variant={selectedCategory === category.id ? "default" : "outline"}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-full ${
+                  className={`flex items-center gap-1 lg:gap-2 px-3 lg:px-6 py-2 lg:py-3 rounded-full text-xs lg:text-sm ${
                     selectedCategory === category.id 
                       ? 'bg-orange-500 hover:bg-orange-600 text-white' 
                       : 'hover:bg-orange-50 hover:text-orange-600 hover:border-orange-300'
                   }`}
                 >
-                  <IconComponent className="h-4 w-4" />
-                  {category.name}
+                  <IconComponent className="h-3 w-3 lg:h-4 lg:w-4" />
+                  <span className="hidden sm:inline">{category.name}</span>
+                  <span className="sm:hidden">{category.name.split(' ')[0]}</span>
                   <Badge variant="secondary" className="ml-1 text-xs">
                     {category.count}
                   </Badge>
@@ -307,22 +307,22 @@ export default function DestinationsPage() {
         </div>
 
         {/* Filters and Sort */}
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-4 mb-6 lg:mb-8">
+          <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
             <Select value={priceRange} onValueChange={handlePriceFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-40 lg:w-48">
                 <SelectValue placeholder="Price Range" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Prices</SelectItem>
-                <SelectItem value="budget">Budget (Under ₹20k)</SelectItem>
-                <SelectItem value="mid">Mid-range (₹20k-30k)</SelectItem>
-                <SelectItem value="luxury">Luxury (Above ₹30k)</SelectItem>
+                <SelectItem value="budget">Budget (Under ₹6k)</SelectItem>
+                <SelectItem value="mid">Mid-range (₹6k-7k)</SelectItem>
+                <SelectItem value="luxury">Premium (Above ₹7k)</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={sortBy} onValueChange={handleSort}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-40 lg:w-48">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>
@@ -334,39 +334,41 @@ export default function DestinationsPage() {
             </Select>
           </div>
 
-          <p className="text-gray-600">
-            Showing {filteredDestinations.length} of {destinations.length} destinations
-          </p>
+          <div className="text-center sm:text-left">
+            <p className="text-gray-600 text-sm">
+              Showing {filteredDestinations.length} of {destinations.length} destinations
+            </p>
+          </div>
         </div>
 
         {/* Destinations Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
           {filteredDestinations.map((destination) => (
-            <Card key={destination.id} className="group overflow-hidden hover:shadow-2xl transition-all duration-500 border-0 bg-white rounded-2xl">
+            <Card key={destination.id} className="group overflow-hidden hover:shadow-xl transition-all duration-300 border-0 bg-white rounded-xl lg:rounded-2xl">
               <div className="relative overflow-hidden">
                 <img
                   src={destination.image}
                   alt={destination.name}
-                  className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-700"
+                  className="w-full h-40 sm:h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
                 
                 {/* Badges */}
-                <div className="absolute top-3 left-3 flex flex-col gap-2">
+                <div className="absolute top-2 left-2 lg:top-3 lg:left-3 flex flex-col gap-1 lg:gap-2">
                   {destination.featured && (
-                    <Badge className="bg-orange-500 text-white text-xs font-medium">
+                    <Badge className="bg-orange-500 text-white text-xs font-medium px-2 py-1">
                       FEATURED
                     </Badge>
                   )}
-                  <Badge variant="outline" className="bg-white/90 text-gray-900 text-xs">
+                  <Badge variant="outline" className="bg-white/90 text-gray-900 text-xs px-2 py-1">
                     {destination.type}
                   </Badge>
                 </div>
 
                 {/* Rating and Heart */}
-                <div className="absolute top-3 right-3 flex flex-col gap-2">
-                  <Button size="sm" variant="ghost" className="h-8 w-8 rounded-full bg-white/20 hover:bg-white/30 text-white p-0">
-                    <Heart className="h-4 w-4" />
+                <div className="absolute top-2 right-2 lg:top-3 lg:right-3 flex flex-col gap-1 lg:gap-2">
+                  <Button size="sm" variant="ghost" className="h-7 w-7 lg:h-8 lg:w-8 rounded-full bg-white/20 hover:bg-white/30 text-white p-0">
+                    <Heart className="h-3 w-3 lg:h-4 lg:w-4" />
                   </Button>
                   <div className="flex items-center bg-white/90 rounded-full px-2 py-1">
                     <Star className="h-3 w-3 text-yellow-500 fill-current mr-1" />
@@ -375,69 +377,69 @@ export default function DestinationsPage() {
                 </div>
 
                 {/* Best Time */}
-                <div className="absolute bottom-3 left-3">
-                  <Badge variant="outline" className="bg-white/90 text-gray-900 text-xs">
+                <div className="absolute bottom-2 left-2 lg:bottom-3 lg:left-3">
+                  <Badge variant="outline" className="bg-white/90 text-gray-900 text-xs px-2 py-1">
                     <Calendar className="h-3 w-3 mr-1" />
                     {destination.bestTime}
                   </Badge>
                 </div>
               </div>
               
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center text-gray-500">
-                    <MapPin className="h-4 w-4 mr-1" />
-                    <span className="text-sm">{destination.location}</span>
+              <CardContent className="p-3 lg:p-5">
+                <div className="flex items-center justify-between mb-2 text-xs lg:text-sm">
+                  <div className="flex items-center text-gray-500 min-w-0 flex-1">
+                    <MapPin className="h-3 w-3 lg:h-4 lg:w-4 mr-1 flex-shrink-0" />
+                    <span className="truncate">{destination.location}</span>
                   </div>
-                  <div className="flex items-center text-gray-500">
-                    <Clock className="h-4 w-4 mr-1" />
-                    <span className="text-sm">{destination.duration}</span>
+                  <div className="flex items-center text-gray-500 ml-2">
+                    <Clock className="h-3 w-3 lg:h-4 lg:w-4 mr-1" />
+                    <span className="whitespace-nowrap">{destination.duration}</span>
                   </div>
                 </div>
                 
-                <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-orange-500 transition-colors">
+                <h3 className="text-base lg:text-lg font-bold text-gray-900 mb-2 group-hover:text-orange-500 transition-colors line-clamp-2">
                   {destination.name}
                 </h3>
                 
-                <p className="text-gray-600 mb-3 text-sm line-clamp-2">
+                <p className="text-gray-600 mb-3 text-xs lg:text-sm line-clamp-2">
                   {destination.description}
                 </p>
 
                 {/* Highlights */}
-                <div className="flex flex-wrap gap-1 mb-4">
+                <div className="flex flex-wrap gap-1 mb-3 lg:mb-4">
                   {destination.highlights.slice(0, 2).map((highlight, index) => (
-                    <Badge key={index} variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
+                    <Badge key={index} variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200 px-2 py-1">
                       {highlight}
                     </Badge>
                   ))}
                 </div>
 
                 {/* Group Size and Reviews */}
-                <div className="flex items-center justify-between text-xs text-gray-500 mb-4">
+                <div className="flex items-center justify-between text-xs text-gray-500 mb-3 lg:mb-4">
                   <div className="flex items-center">
                     <Users className="h-3 w-3 mr-1" />
-                    <span>{destination.groupSize}</span>
+                    <span className="truncate">{destination.groupSize}</span>
                   </div>
-                  <span>{destination.reviews} reviews</span>
+                  <span className="whitespace-nowrap">{destination.reviews} reviews</span>
                 </div>
                 
                 <div className="flex items-center justify-between">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-baseline">
-                      <span className="text-xl font-bold text-orange-500">
+                      <span className="text-lg lg:text-xl font-bold text-orange-500">
                         ₹{destination.price.toLocaleString()}
                       </span>
-                      <span className="text-sm text-gray-400 line-through ml-2">
+                      <span className="text-xs lg:text-sm text-gray-400 line-through ml-1 lg:ml-2">
                         ₹{destination.originalPrice.toLocaleString()}
                       </span>
                     </div>
                     <span className="text-gray-500 text-xs">per person</span>
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="p-2 h-8 w-8">
-                      <Camera className="h-4 w-4" />
+                  <div className="flex gap-1 lg:gap-2 ml-2">
+                    <Button size="sm" variant="outline" className="p-1 lg:p-2 h-7 w-7 lg:h-8 lg:w-8">
+                      <Camera className="h-3 w-3 lg:h-4 lg:w-4" />
                     </Button>
-                    <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white px-4">
+                    <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white px-2 lg:px-4 text-xs lg:text-sm">
                       Book
                       <ArrowRight className="h-3 w-3 ml-1" />
                     </Button>
@@ -477,11 +479,11 @@ export default function DestinationsPage() {
 
         {/* Load More Button */}
         {filteredDestinations.length > 0 && (
-          <div className="text-center mt-12">
+          <div className="text-center mt-8 lg:mt-12">
             <Button 
               size="lg" 
               variant="outline"
-              className="border-orange-500 text-orange-500 hover:bg-orange-50 px-8 py-4 rounded-full"
+              className="border-orange-500 text-orange-500 hover:bg-orange-50 px-6 lg:px-8 py-3 lg:py-4 rounded-full text-sm lg:text-base"
             >
               Load More Destinations
               <ArrowRight className="h-4 w-4 ml-2" />
