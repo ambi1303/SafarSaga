@@ -11,9 +11,9 @@ const destinations = [
     name: 'Manali, Himachal Pradesh',
     location: 'Himachal Pradesh',
     description: 'Snow-capped mountains, adventure sports, and scenic valleys',
-    image: 'https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop',
+    image: 'https://c.ndtvimg.com/2025-05/tvo5sgd_manali_625x300_01_May_25.jpg?im=FaceCrop,algorithm=dnn,width=1200,height=738',
     rating: 4.8,
-    price: 'From ₹12,999',
+    price: 'From ₹5499',
     duration: '3N/4D'
   },
   {
@@ -21,9 +21,9 @@ const destinations = [
     name: 'Srinagar, Kashmir',
     location: 'Jammu & Kashmir',
     description: 'Paradise on earth with pristine lakes and houseboats',
-    image: 'https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop',
+    image:'https://imagedelivery.net/y9EHf1toWJTBqJVsQzJU4g/www.indianholiday.com/2025/06/places-to-visit-in-srinagar.png/w=700,h=304',
     rating: 4.9,
-    price: 'From ₹22,999',
+    price: 'From ₹14,999',
     duration: '5N/6D'
   },
   {
@@ -31,9 +31,9 @@ const destinations = [
     name: 'Jaipur, Rajasthan',
     location: 'Rajasthan',
     description: 'Royal palaces, desert safaris, and rich cultural heritage',
-    image: 'https://images.pexels.com/photos/3278215/pexels-photo-3278215.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop',
+    image:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/East_facade_Hawa_Mahal_Jaipur_from_ground_level_%28July_2022%29_-_img_01.jpg/1200px-East_facade_Hawa_Mahal_Jaipur_from_ground_level_%28July_2022%29_-_img_01.jpg',
     rating: 4.7,
-    price: 'From ₹18,999',
+    price: 'From ₹5,999',
     duration: '4N/5D'
   },
   {
@@ -41,29 +41,20 @@ const destinations = [
     name: 'Goa Beaches',
     location: 'Goa',
     description: 'Pristine beaches, water sports, and vibrant nightlife',
-    image: 'https://images.pexels.com/photos/1450353/pexels-photo-1450353.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop',
+    image: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/18/3e/36/95/baga-sea-beach.jpg?w=600&h=-1&s=1',
     rating: 4.6,
-    price: 'From ₹15,999',
+    price: 'From ₹10,999',
     duration: '4N/5D'
   },
+  
   {
     id: 5,
-    name: 'Alleppey, Kerala',
-    location: 'Kerala',
-    description: 'Serene backwaters, houseboat cruises, and spice gardens',
-    image: 'https://images.pexels.com/photos/2506923/pexels-photo-2506923.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop',
-    rating: 4.8,
-    price: 'From ₹19,999',
-    duration: '5N/6D'
-  },
-  {
-    id: 6,
     name: 'Leh, Ladakh',
     location: 'Ladakh',
     description: 'High altitude desert, pristine lakes, and ancient monasteries',
-    image: 'https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=500&h=300&fit=crop',
+    image: 'https://discoverlehladakh.in/wp-content/uploads/2025/04/Leh-Ladakh-in-June-month-1140x530.jpg',
     rating: 4.9,
-    price: 'From ₹35,999',
+    price: 'From ₹14,999',
     duration: '7N/8D'
   }
 ];

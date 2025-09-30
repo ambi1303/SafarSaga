@@ -102,7 +102,7 @@ const Header = () => {
               </div>
               <div className="ml-3 hidden sm:block">
                 <div className="text-xl lg:text-2xl font-bold text-gray-900 group-hover:text-orange-500 transition-colors">
-                  SafarSaga
+                  SafarSagaTrips
                 </div>
                 <div className="text-xs lg:text-sm text-gray-500 -mt-1">
                   Explore Incredible India

@@ -147,7 +147,7 @@ const destinations = [
     name: 'Manali & Kasol 3N/4D',
     location: 'Himachal Pradesh',
     type: 'Adventure',
-    price: 5999,
+    price: 6499,
     originalPrice: 8799,
     duration: '3N/4D',
     rating: 4.9,
