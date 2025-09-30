@@ -56,8 +56,8 @@ const Header = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Mail className="h-4 w-4 text-orange-400" />
-                <a href="mailto:info@safarsaga.com" className="hover:text-orange-400 transition-colors">
-                  safarsaga@gmail.com
+                <a href="mailto:safarsagatrips@gmail.com" className="hover:text-orange-400 transition-colors">
+                  safarsagatrips@gmail.com
                 </a>
               </div>
               <div className="flex items-center space-x-2">
@@ -195,8 +195,8 @@ const Header = () => {
                   </div>
                   <div className="flex items-center space-x-3 text-gray-600">
                     <Mail className="h-4 w-4 text-orange-500" />
-                    <a href="mailto:info@safarsaga.com" className="hover:text-orange-500">
-                      info@safarsaga.com
+                    <a href="mailto:safarsagatrips@gmail.com" className="hover:text-orange-500">
+                      safarsagatrips@gmail.com
                     </a>
                   </div>
                 </div>

@@ -578,10 +578,10 @@ export default function PackagesPage() {
                 <div className="flex items-center">
                   <Mail className="h-5 w-5 mr-3" />
                   <a 
-                    href="mailto:info@safarsaga.com" 
+                    href="mailto:safarsagatrips@gmail.com" 
                     className="hover:text-orange-300 transition-colors"
                   >
-                    info@safarsaga.com
+                    safarsagatrips@gmail.com
                   </a>
                 </div>
                 <div className="flex items-center">
