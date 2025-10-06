@@ -750,36 +750,33 @@ async def cancel_booking(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Booking not found"
             )
-        
         # Check access permissions
         if not current_user.is_admin and existing_booking.user_id != current_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied: You can only cancel your own bookings"
             )
-        
         # Check if already cancelled
         if existing_booking.booking_status == BookingStatus.CANCELLED:
             raise BusinessLogicException("Booking is already cancelled", "already_cancelled")
-        
-        # Get event details for validation
-        event = await supabase_service.get_event_by_id(existing_booking.event_id)
-        if event and event.start_date and event.start_date <= datetime.now(timezone.utc):
-            raise BusinessLogicException("Cannot cancel booking for event that has started", "event_started")
-        
+        # Only fetch event if event_id is present and not None/empty
+        event = None
+        event_id = getattr(existing_booking, 'event_id', None)
+        if event_id:
+            event = await supabase_service.get_event_by_id(event_id)
+            # Only check event start date if the event exists
+            if event and getattr(event, 'start_date', None) and event.start_date <= datetime.now(timezone.utc):
+                raise BusinessLogicException("Cannot cancel booking for event that has started", "event_started")
+        # If event_id is None or event is not found, skip event validation (likely a destination booking)
         # Update booking status to cancelled
         update_data = {
             "booking_status": BookingStatus.CANCELLED.value
         }
-        
         # If payment was made, mark for refund processing
         if existing_booking.payment_status == PaymentStatus.PAID:
             update_data["payment_status"] = PaymentStatus.REFUNDED.value
-        
         await supabase_service.update_booking(booking_id, update_data)
-        
         return {"message": "Booking cancelled successfully"}
-        
     except BusinessLogicException as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
