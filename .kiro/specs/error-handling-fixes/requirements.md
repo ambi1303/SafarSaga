@@ -49,3 +49,15 @@ The SafarSaga backend has critical error handling issues that violate HTTP stand
 2. WHEN structured error details are available THEN they SHALL be included in logs
 3. WHEN error patterns emerge THEN they SHALL be trackable through consistent logging
 4. WHEN debugging is needed THEN sufficient information SHALL be available in logs
+
+### Requirement 5
+
+**User Story:** As a user, I want to be able to cancel my booking even if there are data inconsistencies, so that I'm not blocked by orphaned database references.
+
+#### Acceptance Criteria
+
+1. WHEN a booking cancellation is requested AND the booking has an invalid event_id reference THEN the system SHALL handle the missing event gracefully
+2. WHEN fetching an event fails during cancellation THEN the system SHALL log a warning and continue with the cancellation process
+3. WHEN event-related validation cannot be performed due to missing data THEN the system SHALL skip those validations and proceed
+4. WHEN a booking is successfully cancelled despite data inconsistencies THEN the system SHALL return a proper success response (HTTP 204)
+5. WHEN data integrity issues are encountered THEN they SHALL be logged for administrative review without blocking user operations

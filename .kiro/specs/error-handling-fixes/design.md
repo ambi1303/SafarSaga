@@ -225,6 +225,59 @@ async def validation_exception_handler(request: Request, exc: ValidationExceptio
 2. **Client SDK Updates**: Update client libraries to handle structured errors
 3. **Monitoring Integration**: Add error tracking and alerting systems
 
+## Graceful Handling of Data Inconsistencies
+
+### Problem: Orphaned Event References
+When bookings reference events that no longer exist in the database, cancellation operations fail with 500 errors because `get_event_by_id()` raises an exception when the event is not found.
+
+### Solution: Defensive Programming in Cancellation Flow
+```python
+# In cancel_booking endpoint
+async def cancel_booking(booking_id: str, ...):
+    # ... existing booking fetch logic ...
+    
+    # Gracefully handle potentially missing event references
+    event = None
+    event_id = getattr(existing_booking, 'event_id', None)
+    
+    if event_id:
+        try:
+            event = await supabase_service.get_event_by_id(event_id)
+        except Exception as e:
+            # Log the data inconsistency but don't block cancellation
+            logger.warning(
+                f"Could not fetch event {event_id} during booking cancellation: {str(e)}",
+                extra={
+                    "booking_id": booking_id,
+                    "event_id": event_id,
+                    "operation": "cancel_booking"
+                }
+            )
+            event = None
+    
+    # Continue with cancellation logic
+    # Event-dependent validations will be skipped if event is None
+    if event:
+        # Perform event-related validations
+        pass
+    
+    # Proceed with cancellation regardless
+    # ...
+```
+
+### Benefits
+1. **User Experience**: Users can cancel bookings even with data inconsistencies
+2. **Operational Resilience**: System continues functioning despite data integrity issues
+3. **Visibility**: Data problems are logged for administrative review
+4. **Graceful Degradation**: Operations degrade gracefully rather than failing completely
+
+### Alternative Approaches Considered
+1. **Fix data inconsistency first**: Requires manual DB intervention, blocks users
+2. **Make get_event_by_id return None**: Changes behavior globally, may hide bugs elsewhere
+3. **Add event existence check**: Adds extra query overhead for all operations
+
+The chosen approach (defensive programming in cancellation) provides the best balance of robustness, user experience, and maintainability.
+
 ## Security Considerations
 
 ### Error Information Disclosure

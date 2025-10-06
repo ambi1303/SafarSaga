@@ -46,9 +46,18 @@
   - Test get_booking endpoints for proper authorization and not found errors
   - _Requirements: 2.3, 3.3, 4.2_
 
-- [ ] 8. Verify error response consistency and client compatibility
+- [-] 8. Implement graceful handling of missing event references in cancel_booking
+
+  - Add defensive try/except block around get_event_by_id() call in cancellation flow
+  - Log warning when event cannot be fetched but continue with cancellation
+  - Skip event-dependent validations when event is None
+  - Ensure cancellation completes successfully despite data inconsistencies
+  - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
+
+- [ ] 9. Verify error response consistency and client compatibility
   - Test all error scenarios return consistent JSON structure with error codes
   - Verify frontend can handle new structured error responses
   - Confirm HTTP status codes remain consistent with existing API contracts
   - Test error logging includes proper context and structured details
-  - _Requirements: 3.1, 3.4, 4.3_
+  - Test booking cancellation with invalid event_id references
+  - _Requirements: 3.1, 3.4, 4.3, 5.4_

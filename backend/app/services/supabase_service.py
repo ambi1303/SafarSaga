@@ -707,27 +707,47 @@ class SupabaseService:
                     response = query.execute()
                     bookings_data = response.data if response.data else []
                     
-                    # Manually join destination and event data
+                    # Manually join destination, event, and user data
                     enriched_bookings = []
                     for booking in bookings_data:
                         enriched_booking = booking.copy()
+                        
+                        # Get user data if user_id exists
+                        if booking.get('user_id'):
+                            try:
+                                user_response = self._get_client().table("users").select("id, email, full_name").eq("id", booking['user_id']).execute()
+                                if user_response.data:
+                                    user_data = user_response.data[0]
+                                    enriched_booking['user_name'] = user_data.get('full_name')
+                                    enriched_booking['user_email'] = user_data.get('email')
+                            except Exception as user_error:
+                                print(f"Warning: Could not fetch user {booking.get('user_id')}: {str(user_error)}")
+                                enriched_booking['user_name'] = None
+                                enriched_booking['user_email'] = None
                         
                         # Get destination data if destination_id exists
                         if booking.get('destination_id'):
                             try:
                                 dest_response = self._get_client().table("destinations").select("*").eq("id", booking['destination_id']).execute()
                                 if dest_response.data:
-                                    enriched_booking['destination'] = dest_response.data[0]
+                                    dest_data = dest_response.data[0]
+                                    enriched_booking['destination'] = dest_data
+                                    enriched_booking['destination_name'] = dest_data.get('name')
                             except Exception as dest_error:
                                 print(f"Warning: Could not fetch destination {booking.get('destination_id')}: {str(dest_error)}")
                                 enriched_booking['destination'] = None
+                                enriched_booking['destination_name'] = None
                         
                         # Get event data if event_id exists
                         if booking.get('event_id'):
                             try:
                                 event_response = self._get_client().table("events").select("*").eq("id", booking['event_id']).execute()
                                 if event_response.data:
-                                    enriched_booking['event'] = event_response.data[0]
+                                    event_data = event_response.data[0]
+                                    enriched_booking['event'] = event_data
+                                    # If no destination_name, use event name
+                                    if not enriched_booking.get('destination_name'):
+                                        enriched_booking['destination_name'] = event_data.get('name')
                             except Exception as event_error:
                                 print(f"Warning: Could not fetch event {booking.get('event_id')}: {str(event_error)}")
                                 enriched_booking['event'] = None

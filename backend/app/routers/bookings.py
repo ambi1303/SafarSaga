@@ -2,7 +2,8 @@
 Bookings/Tickets routes for SafarSaga API
 """
 
-from fastapi import APIRouter, HTTPException, Depends, status, Query
+import logging
+from fastapi import APIRouter, HTTPException, Depends, status, Query, Response
 from typing import Optional, List
 from decimal import Decimal
 from datetime import datetime, timezone
@@ -26,6 +27,7 @@ from app.exceptions import (
 
 router = APIRouter()
 supabase_service = SupabaseService()
+logger = logging.getLogger(__name__)
 
 
 class BookingStats(BaseModel):
@@ -759,24 +761,45 @@ async def cancel_booking(
         # Check if already cancelled
         if existing_booking.booking_status == BookingStatus.CANCELLED:
             raise BusinessLogicException("Booking is already cancelled", "already_cancelled")
-        # Only fetch event if event_id is present and not None/empty
+        
+        # Gracefully handle potentially missing event references
         event = None
         event_id = getattr(existing_booking, 'event_id', None)
+        
         if event_id:
-            event = await supabase_service.get_event_by_id(event_id)
-            # Only check event start date if the event exists
-            if event and getattr(event, 'start_date', None) and event.start_date <= datetime.now(timezone.utc):
+            try:
+                event = await supabase_service.get_event_by_id(event_id)
+            except Exception as e:
+                # Log the data inconsistency but don't block cancellation
+                logger.warning(
+                    f"Could not fetch event {event_id} during booking cancellation: {str(e)}",
+                    extra={
+                        "booking_id": booking_id,
+                        "event_id": event_id,
+                        "operation": "cancel_booking",
+                        "user_id": current_user.id
+                    }
+                )
+                event = None
+        
+        # Perform event-related validations only if event exists
+        if event and getattr(event, 'start_date', None):
+            if event.start_date <= datetime.now(timezone.utc):
                 raise BusinessLogicException("Cannot cancel booking for event that has started", "event_started")
-        # If event_id is None or event is not found, skip event validation (likely a destination booking)
+        
         # Update booking status to cancelled
         update_data = {
             "booking_status": BookingStatus.CANCELLED.value
         }
+        
         # If payment was made, mark for refund processing
         if existing_booking.payment_status == PaymentStatus.PAID:
             update_data["payment_status"] = PaymentStatus.REFUNDED.value
+        
         await supabase_service.update_booking(booking_id, update_data)
-        return {"message": "Booking cancelled successfully"}
+        
+        # Return proper HTTP 204 response with no body (compliant with RFC standards)
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
     except BusinessLogicException as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
