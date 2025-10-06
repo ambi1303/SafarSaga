@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import WhatsAppButton from '@/components/WhatsAppButton';
 import ScrollToTop from '@/components/ScrollToTop';
 import { Toaster } from '@/components/ui/toaster';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,14 +23,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
-        <Header />
-        <main className="min-h-screen page-transition">
-          {children}
-        </main>
-        <Footer />
-        <WhatsAppButton />
-        <ScrollToTop />
-        <Toaster />
+        <AuthProvider>
+          <Header />
+          <main className="min-h-screen page-transition">
+            {children}
+          </main>
+          <Footer />
+          <WhatsAppButton />
+          <ScrollToTop />
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

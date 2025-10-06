@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Menu,
   X,
@@ -12,13 +13,19 @@ import {
   Mail,
   MapPin,
   Star,
-  Shield
+  Shield,
+  User,
+  LogOut,
+  Settings,
+  Calendar
 } from 'lucide-react';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { user, signOut, loading } = useAuth();
 
   const navItems = [
     { href: '/', label: 'Home' },
@@ -28,6 +35,7 @@ const Header = () => {
       badge: 'New'
     },
     { href: '/destinations', label: 'Destinations' },
+    { href: '/gallery', label: 'Gallery' },
     { href: '/reviews', label: 'Reviews' },
     { href: '/about', label: 'About Us' },
     { href: '/contact', label: 'Contact Us' },
@@ -40,6 +48,17 @@ const Header = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuOpen && !(event.target as Element).closest('.user-menu')) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [userMenuOpen]);
 
   return (
     <>
@@ -136,20 +155,82 @@ const Header = () => {
             </nav>
 
             {/* Desktop Actions */}
-            <div className="hidden lg:flex items-center">
-              <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-2.5 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300">
-                Book Now
-              </Button>
+            <div className="hidden lg:flex items-center space-x-4">
+              {!loading && (
+                <>
+                  {user ? (
+                    <div className="relative user-menu">
+                      <button
+                        onClick={() => setUserMenuOpen(!userMenuOpen)}
+                        className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+                      >
+                        <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center">
+                          <User className="h-4 w-4 text-white" />
+                        </div>
+                        <span className="text-gray-700 font-medium">{user.full_name}</span>
+                      </button>
+                      
+                      {userMenuOpen && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                          <Link
+                            href={user.is_admin ? "/admin" : "/dashboard"}
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => setUserMenuOpen(false)}
+                          >
+                            <Calendar className="h-4 w-4 mr-2" />
+                            {user.is_admin ? "Admin Dashboard" : "My Dashboard"}
+                          </Link>
+                          <Link
+                            href="/profile"
+                            className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            onClick={() => setUserMenuOpen(false)}
+                          >
+                            <Settings className="h-4 w-4 mr-2" />
+                            Profile Settings
+                          </Link>
+                          <button
+                            onClick={() => {
+                              signOut();
+                              setUserMenuOpen(false);
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          >
+                            <LogOut className="h-4 w-4 mr-2" />
+                            Sign Out
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-3">
+                      <Link href="/auth/login">
+                        <Button variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-50">
+                          Sign In
+                        </Button>
+                      </Link>
+                      <Link href="/auth/register">
+                        <Button className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white px-6 py-2.5 rounded-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300">
+                          Sign Up
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Mobile Actions */}
             <div className="flex items-center space-x-2 lg:hidden">
-              <Button
-                size="sm"
-                className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 text-xs rounded-lg"
-              >
-                Book
-              </Button>
+              {!loading && user && (
+                <Link href={user.is_admin ? "/admin" : "/dashboard"}>
+                  <Button
+                    size="sm"
+                    className="bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 text-xs rounded-lg"
+                  >
+                    {user.is_admin ? "Admin" : "Dashboard"}
+                  </Button>
+                </Link>
+              )}
               <button
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -184,9 +265,53 @@ const Header = () => {
                 ))}
               </div>
 
-              {/* Mobile Contact Info */}
+              {/* Mobile Contact Info & Auth */}
               <div className="mt-6 pt-4 border-t border-gray-100">
-                <div className="space-y-3 text-sm">
+                {user ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3 text-gray-700">
+                      <User className="h-4 w-4 text-orange-500" />
+                      <span className="font-medium">{user.full_name}</span>
+                    </div>
+                    <Link
+                      href={user.is_admin ? "/admin" : "/dashboard"}
+                      className="flex items-center space-x-3 text-gray-600 hover:text-orange-500"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Calendar className="h-4 w-4 text-orange-500" />
+                      <span>{user.is_admin ? "Admin Dashboard" : "My Dashboard"}</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        signOut();
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center space-x-3 text-gray-600 hover:text-orange-500"
+                    >
+                      <LogOut className="h-4 w-4 text-orange-500" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <Link
+                      href="/auth/login"
+                      className="flex items-center justify-center w-full py-2 px-4 border border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/auth/register"
+                      className="flex items-center justify-center w-full py-2 px-4 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
+                
+                <div className="mt-4 pt-4 border-t border-gray-100 space-y-3 text-sm">
                   <div className="flex items-center space-x-3 text-gray-600">
                     <Phone className="h-4 w-4 text-orange-500" />
                     <a href="tel:+919311706027" className="hover:text-orange-500">
@@ -200,9 +325,6 @@ const Header = () => {
                     </a>
                   </div>
                 </div>
-                <Button className="w-full mt-4 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white py-3 rounded-lg font-medium">
-                  Book Your Trip Now
-                </Button>
               </div>
             </nav>
           )}

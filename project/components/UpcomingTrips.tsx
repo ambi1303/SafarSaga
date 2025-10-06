@@ -1,5 +1,8 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLoginRequired } from '@/components/auth/LoginRequiredModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -105,10 +108,34 @@ const upcomingTrips = [
 ];
 
 const UpcomingTrips = () => {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const { showLoginRequired, LoginRequiredModal } = useLoginRequired();
+  
   const featuredTrips = upcomingTrips.filter(trip => trip.featured);
   const regularTrips = upcomingTrips.filter(trip => !trip.featured);
 
+  const handleBookTrip = (trip: any) => {
+    if (!isAuthenticated) {
+      showLoginRequired({
+        title: "Login Required to Book",
+        message: `You need to be logged in to book "${trip.title}". Please sign in or create an account to continue with your booking.`,
+        actionText: "book this trip"
+      });
+      return;
+    }
+
+    // Show booking confirmation
+    alert(`Booking initiated for ${trip.title}!\n\nDestination: ${trip.destination}\nDate: ${trip.date}\nPrice: ₹${trip.price}\nDuration: ${trip.duration}\nSpots Left: ${trip.spotsLeft}\n\nBooking system will be implemented to handle this request.`);
+  };
+
+  const handleExploreAll = () => {
+    router.push('/destinations');
+  };
+
   return (
+    <>
+      <LoginRequiredModal />
     <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-gray-50 to-blue-50">
       <div className="container mx-auto px-4">
         {/* Section Header */}
@@ -223,7 +250,10 @@ const UpcomingTrips = () => {
                         <Camera className="h-4 w-4 mr-2" />
                         Gallery
                       </Button>
-                      <Button className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-6">
+                      <Button 
+                        onClick={() => handleBookTrip(trip)}
+                        className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-6"
+                      >
                         Book Now
                       </Button>
                     </div>
@@ -299,7 +329,11 @@ const UpcomingTrips = () => {
                         ₹{trip.originalPrice.toLocaleString()}
                       </div>
                     </div>
-                    <Button size="sm" className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-4">
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleBookTrip(trip)}
+                      className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-4"
+                    >
                       Book Now
                     </Button>
                   </div>
@@ -313,6 +347,7 @@ const UpcomingTrips = () => {
         <div className="text-center mt-12 lg:mt-16">
           <Button 
             size="lg" 
+            onClick={handleExploreAll}
             className="bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-medium px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
           >
             Explore All Destinations
@@ -321,6 +356,7 @@ const UpcomingTrips = () => {
         </div>
       </div>
     </section>
+    </>
   );
 };
 

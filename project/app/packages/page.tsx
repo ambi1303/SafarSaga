@@ -1,17 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLoginRequired } from '@/components/auth/LoginRequiredModal';
+import { BookingModal } from '@/components/booking/BookingModal';
+import { BookingDestination } from '@/lib/booking-service';
+import { DestinationsService, Destination } from '@/lib/destinations-service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { 
-  MapPin, 
-  Calendar, 
-  Users, 
-  Star, 
-  Search, 
+import {
+  MapPin,
+  Calendar,
+  Users,
+  Star,
+  Search,
   Filter,
   Clock,
   CheckCircle,
@@ -188,10 +194,92 @@ const faqs = [
 ];
 
 export default function PackagesPage() {
-  const [filteredPackages, setFilteredPackages] = useState(packages);
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const { showLoginRequired, LoginRequiredModal } = useLoginRequired();
+  const [packages, setPackages] = useState<any[]>([]);
+  const [filteredPackages, setFilteredPackages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [priceFilter, setPriceFilter] = useState('all');
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<BookingDestination | null>(null);
+
+  // Load packages from backend
+  useEffect(() => {
+    loadPackages();
+  }, []);
+
+  const loadPackages = async () => {
+    try {
+      setLoading(true);
+      const backendDestinations = await DestinationsService.getDestinations({
+        is_active: true,
+        limit: 50
+      });
+      
+      // Convert backend destinations to package format
+      const uiPackages = backendDestinations.items.map((dest: Destination) => ({
+        id: dest.id, // Keep original UUID format
+        name: dest.name,
+        destination: `${dest.name}, ${dest.state}`,
+        price: Math.round(dest.average_cost_per_day ? dest.average_cost_per_day * 3 : 5499), // 3 days default
+        originalPrice: Math.round(dest.average_cost_per_day ? dest.average_cost_per_day * 3 * 1.4 : 7699), // 40% markup
+        duration: "2N/3D", // Default duration
+        groupSize: "2-8 people", // Default group size
+        image: dest.featured_image_url || 'https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
+        description: dest.description || `Explore the beautiful ${dest.name} with our carefully crafted travel package.`,
+        highlights: dest.popular_activities?.slice(0, 4) || ['Adventure', 'Sightseeing', 'Local Culture', 'Photography'],
+        rating: 4.8, // Default rating
+        reviews: Math.floor(Math.random() * 200) + 50, // Random reviews between 50-250
+        category: dest.difficulty_level?.toLowerCase() === 'easy' ? 'nature' : 
+                 dest.difficulty_level?.toLowerCase() === 'challenging' ? 'adventure' : 'cultural'
+      }));
+      
+      setPackages(uiPackages);
+      setFilteredPackages(uiPackages);
+    } catch (error) {
+      console.error('Failed to load packages:', error);
+      // Use mock data as fallback
+      const mockPackages = [
+        {
+          id: 1,
+          name: "Manali & Kasol 2N/3D",
+          destination: "Manali & Kasol",
+          price: 5499,
+          originalPrice: 7999,
+          duration: "2N/3D",
+          groupSize: "4-8 people",
+          image: "https://liveb4youdie.com/wp-content/uploads/2021/10/lk3gk710you9ms5vu287emjabfd3_0001-5078545066_20210730_154224_0000.jpg",
+          description: "Experience the beauty of Himachal with snow-capped mountains and serene valleys",
+          highlights: ["Snow Activities", "Valley Views", "Local Culture", "Adventure Sports"],
+          rating: 4.8,
+          reviews: 124,
+          category: "adventure"
+        },
+        {
+          id: 2,
+          name: "Chakrata 1N/2D",
+          destination: "Chakrata",
+          price: 4999,
+          originalPrice: 6499,
+          duration: "1N/2D",
+          groupSize: "2-6 people",
+          image: "https://storage.googleapis.com/stateless-www-justwravel-com/2024/11/4e0d5d8a-chakrata-1.jpg",
+          description: "Peaceful hill station getaway with pristine nature and tranquil environment",
+          highlights: ["Nature Walks", "Tiger Falls", "Peaceful Environment", "Hill Station"],
+          rating: 4.7,
+          reviews: 89,
+          category: "nature"
+        }
+      ];
+      setPackages(mockPackages);
+      setFilteredPackages(mockPackages);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -208,11 +296,43 @@ export default function PackagesPage() {
     filterPackages(searchTerm, categoryFilter, price);
   };
 
+  const handleBookNow = (pkg: any) => {
+    if (!isAuthenticated) {
+      showLoginRequired({
+        title: "Login Required to Book",
+        message: `You need to be logged in to book "${pkg.name}". Please sign in or create an account to continue with your booking.`,
+        actionText: "book this package"
+      });
+      return;
+    }
+
+    // Convert package to BookingDestination format
+    const bookingDestination: BookingDestination = {
+      id: pkg.id.toString(),
+      name: pkg.name,
+      destination: pkg.destination,
+      location: pkg.destination,
+      price: pkg.price,
+      originalPrice: pkg.originalPrice,
+      duration: pkg.duration,
+      groupSize: pkg.groupSize,
+      image: pkg.image,
+      description: pkg.description,
+      highlights: pkg.highlights,
+      rating: pkg.rating,
+      reviews: pkg.reviews,
+      category: pkg.category
+    };
+
+    setSelectedPackage(bookingDestination);
+    setBookingModalOpen(true);
+  };
+
   const filterPackages = (search: string, category: string, price: string) => {
     let filtered = packages;
 
     if (search) {
-      filtered = filtered.filter(pkg => 
+      filtered = filtered.filter(pkg =>
         pkg.name.toLowerCase().includes(search.toLowerCase()) ||
         pkg.destination.toLowerCase().includes(search.toLowerCase())
       );
@@ -236,10 +356,32 @@ export default function PackagesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      <LoginRequiredModal />
+      {selectedPackage && (
+        <BookingModal
+          isOpen={bookingModalOpen}
+          onClose={() => {
+            setBookingModalOpen(false);
+            setSelectedPackage(null);
+          }}
+          destination={selectedPackage}
+          onBookingComplete={(bookingId) => {
+            console.log('Booking completed:', bookingId);
+            // Close the modal first
+            setBookingModalOpen(false);
+            setSelectedPackage(null);
+            // Show success message and redirect to dashboard
+            setTimeout(() => {
+              router.push('/dashboard?booking=success');
+            }, 500);
+          }}
+        />
+      )}
+      <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <section className="relative h-96 lg:h-[500px] flex items-center justify-center">
-        <div 
+        <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
             backgroundImage: 'url("https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=1920&h=600&fit=crop")'
@@ -254,7 +396,22 @@ export default function PackagesPage() {
           <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">
             Discover amazing destinations with our carefully crafted travel packages
           </p>
-          <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg">
+          <Button 
+            size="lg" 
+            onClick={() => {
+              if (!isAuthenticated) {
+                showLoginRequired({
+                  title: "Login Required",
+                  message: "You need to be logged in to book an adventure. Please sign in or create an account to continue.",
+                  actionText: "book your adventure"
+                });
+              } else {
+                // Scroll to packages section
+                document.querySelector('#packages-section')?.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 text-lg"
+          >
             Book Your Adventure Now
           </Button>
         </div>
@@ -301,7 +458,7 @@ export default function PackagesPage() {
       </section>
 
       {/* Package Listings */}
-      <section className="py-12">
+      <section id="packages-section" className="py-12">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
@@ -311,9 +468,35 @@ export default function PackagesPage() {
               Choose from our handpicked destinations and create memories that last a lifetime
             </p>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPackages.map((pkg) => (
+
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[...Array(6)].map((_, index) => (
+                <div key={index} className="bg-white rounded-lg overflow-hidden animate-pulse">
+                  <div className="w-full h-48 bg-gray-200"></div>
+                  <div className="p-6">
+                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-6 bg-gray-200 rounded mb-2 w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                    <div className="flex gap-2 mb-4">
+                      <div className="h-6 bg-gray-200 rounded w-16"></div>
+                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                    </div>
+                    <div className="flex justify-between items-center mb-6">
+                      <div className="h-4 bg-gray-200 rounded w-20"></div>
+                      <div className="h-4 bg-gray-200 rounded w-16"></div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="h-10 bg-gray-200 rounded flex-1"></div>
+                      <div className="h-10 bg-gray-200 rounded flex-1"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {filteredPackages.map((pkg) => (
               <Card key={pkg.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
                 <div className="relative overflow-hidden">
                   <img
@@ -340,7 +523,7 @@ export default function PackagesPage() {
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{pkg.name}</h3>
                   <p className="text-gray-600 mb-4">{pkg.description}</p>
-                  
+
                   <div className="flex flex-wrap gap-2 mb-4">
                     {pkg.highlights.map((highlight, index) => (
                       <Badge key={index} variant="secondary" className="text-xs">
@@ -348,7 +531,7 @@ export default function PackagesPage() {
                       </Badge>
                     ))}
                   </div>
-                  
+
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center text-gray-500 text-sm">
                       <Users className="h-4 w-4 mr-1" />
@@ -358,29 +541,33 @@ export default function PackagesPage() {
                       {pkg.reviews} reviews
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <span className="text-2xl font-bold text-orange-500">₹{pkg.price.toLocaleString()}</span>
                       <span className="text-sm text-gray-500 line-through ml-2">₹{pkg.originalPrice.toLocaleString()}</span>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button variant="outline" className="flex-1">
                       Read More
                     </Button>
-                    <Button className="flex-1 bg-orange-500 hover:bg-orange-600">
+                    <Button 
+                      onClick={() => handleBookNow(pkg)}
+                      className="flex-1 bg-orange-500 hover:bg-orange-600"
+                    >
                       Book Now
                     </Button>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
-      </section> 
-     {/* How It Works */}
+      </section>
+      {/* How It Works */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -391,7 +578,7 @@ export default function PackagesPage() {
               Book your perfect trip in just 4 simple steps
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
               {
@@ -450,7 +637,7 @@ export default function PackagesPage() {
               Don't miss out on these amazing upcoming adventures
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="relative overflow-hidden rounded-2xl">
               <img
@@ -463,12 +650,22 @@ export default function PackagesPage() {
                 <Badge className="bg-red-500 mb-2">Limited Seats</Badge>
                 <h3 className="text-2xl font-bold mb-2">Ladakh Expedition</h3>
                 <p className="text-lg mb-4">Starting from ₹35,999</p>
-                <Button className="bg-orange-500 hover:bg-orange-600">
+                <Button 
+                  onClick={() => handleBookNow({
+                    id: 'ladakh-expedition',
+                    name: 'Ladakh Expedition',
+                    destination: 'Ladakh',
+                    price: 35999,
+                    duration: '7N/8D',
+                    groupSize: '6-12 people'
+                  })}
+                  className="bg-orange-500 hover:bg-orange-600"
+                >
                   Book Now
                 </Button>
               </div>
             </div>
-            
+
             <div className="relative overflow-hidden rounded-2xl">
               <img
                 src="https://images.pexels.com/photos/2422915/pexels-photo-2422915.jpeg?auto=compress&cs=tinysrgb&w=800&h=500&fit=crop"
@@ -480,7 +677,17 @@ export default function PackagesPage() {
                 <Badge className="bg-green-500 mb-2">Early Bird</Badge>
                 <h3 className="text-2xl font-bold mb-2">Andaman Islands</h3>
                 <p className="text-lg mb-4">Starting from ₹28,999</p>
-                <Button className="bg-orange-500 hover:bg-orange-600">
+                <Button 
+                  onClick={() => handleBookNow({
+                    id: 'andaman-islands',
+                    name: 'Andaman Islands',
+                    destination: 'Andaman & Nicobar Islands',
+                    price: 28999,
+                    duration: '5N/6D',
+                    groupSize: '4-10 people'
+                  })}
+                  className="bg-orange-500 hover:bg-orange-600"
+                >
                   Book Now
                 </Button>
               </div>
@@ -500,7 +707,7 @@ export default function PackagesPage() {
               Real experiences from real travelers
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
               <Card key={index} className="p-6">
@@ -538,7 +745,7 @@ export default function PackagesPage() {
               Got questions? We've got answers
             </p>
           </div>
-          
+
           <div className="max-w-3xl mx-auto space-y-6">
             {faqs.map((faq, index) => (
               <Card key={index} className="p-6">
@@ -561,15 +768,15 @@ export default function PackagesPage() {
               Can't find what you're looking for? Let us create a personalized travel experience just for you.
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-4xl mx-auto">
             <div>
               <h3 className="text-2xl font-bold mb-6">Get in Touch</h3>
               <div className="space-y-4">
                 <div className="flex items-center">
                   <Phone className="h-5 w-5 mr-3" />
-                  <a 
-                    href="tel:+919311706027" 
+                  <a
+                    href="tel:+919311706027"
                     className="hover:text-orange-300 transition-colors"
                   >
                     +91 9311706027
@@ -577,8 +784,8 @@ export default function PackagesPage() {
                 </div>
                 <div className="flex items-center">
                   <Mail className="h-5 w-5 mr-3" />
-                  <a 
-                    href="mailto:safarsagatrips@gmail.com" 
+                  <a
+                    href="mailto:safarsagatrips@gmail.com"
                     className="hover:text-orange-300 transition-colors"
                   >
                     safarsagatrips@gmail.com
@@ -590,7 +797,7 @@ export default function PackagesPage() {
                 </div>
               </div>
             </div>
-            
+
             <div>
               <Card className="p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-4">Quick Inquiry</h3>
@@ -613,5 +820,6 @@ export default function PackagesPage() {
         </div>
       </section>
     </div>
+    </>
   );
 }

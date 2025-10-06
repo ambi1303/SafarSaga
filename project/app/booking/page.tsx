@@ -9,6 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Calendar, Users, CreditCard, Shield } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { submitBooking } from '@/lib/booking-utils';
 
 export default function BookingPage() {
   const [bookingData, setBookingData] = useState({
@@ -24,6 +27,7 @@ export default function BookingPage() {
   });
 
   const [selectedPackage] = useState({
+    id: '0dc450e9-4355-468b-be11-75f2e1a87d63', // Real destination ID
     name: 'Santorini Dream Package',
     image: 'https://images.pexels.com/photos/1285625/pexels-photo-1285625.jpeg?auto=compress&cs=tinysrgb&w=400&h=250&fit=crop',
     duration: '5 days, 4 nights',
@@ -31,13 +35,17 @@ export default function BookingPage() {
     includes: ['Round-trip flights', '4-star hotel accommodation', 'Daily breakfast', 'Airport transfers', 'Local guide']
   });
 
+  const { toast } = useToast();
+  const { token, isAuthenticated } = useAuth();
+  const [loading, setLoading] = useState(false);
+
   const handleInputChange = (field: string, value: string) => {
     setBookingData(prev => ({ ...prev, [field]: value }));
   };
 
   const calculateTotal = () => {
-    const adults = parseInt(bookingData.adults);
-    const children = parseInt(bookingData.children);
+    const adults = parseInt(bookingData.adults) || 0;
+    const children = parseInt(bookingData.children) || 0;
     const basePrice = selectedPackage.price * adults;
     const childrenPrice = selectedPackage.price * 0.5 * children;
     const taxes = (basePrice + childrenPrice) * 0.12;
@@ -49,6 +57,47 @@ export default function BookingPage() {
   };
 
   const pricing = calculateTotal();
+
+  const buildBookingPayload = () => {
+    const adults = parseInt(bookingData.adults) || 0;
+    const children = parseInt(bookingData.children) || 0;
+    const seats = adults + children;
+    if (seats < 1 || seats > 10) {
+      throw new Error(`Invalid number of seats: ${seats}. Must be between 1 and 10.`);
+    }
+    const travelDate = bookingData.checkIn ? new Date(bookingData.checkIn).toISOString() : undefined;
+    return {
+      destination_id: selectedPackage.id,
+      seats,
+      special_requests: bookingData.specialRequests || '',
+      total_amount: calculateTotal().total,
+      travel_date: travelDate,
+      contact_info: {
+        phone: bookingData.phone,
+        emergency_contact: bookingData.phone // Use phone as emergency_contact for now
+      }
+    };
+  };
+
+  const handleBooking = async () => {
+    if (!isAuthenticated || !token) {
+      toast({
+        title: 'Not Authenticated',
+        description: 'You must be logged in to make a booking.'
+      });
+      return;
+    }
+    setLoading(true);
+    try {
+      const payload = buildBookingPayload();
+      await submitBooking({ payload, token });
+      // Optionally: redirect or refresh dashboard
+    } catch (error) {
+      // Error handled in submitBooking
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -274,8 +323,8 @@ export default function BookingPage() {
                   </div>
                 </div>
 
-                <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white h-12 text-lg">
-                  Complete Booking
+                <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white h-12 text-lg" onClick={handleBooking} disabled={loading}>
+                  {loading ? 'Processing...' : 'Complete Booking'}
                 </Button>
 
                 <p className="text-xs text-gray-500 text-center">

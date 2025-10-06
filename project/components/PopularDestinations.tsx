@@ -1,5 +1,11 @@
 'use client';
 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { useLoginRequired } from '@/components/auth/LoginRequiredModal';
+import { BookingModal } from '@/components/booking/BookingModal';
+import { BookingDestination } from '@/lib/booking-service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Star } from 'lucide-react';
@@ -60,7 +66,65 @@ const destinations = [
 ];
 
 const PopularDestinations = () => {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const { showLoginRequired, LoginRequiredModal } = useLoginRequired();
+  const [bookingModalOpen, setBookingModalOpen] = useState(false);
+  const [selectedDestination, setSelectedDestination] = useState<BookingDestination | null>(null);
+
+  const handleBookDestination = (destination: any) => {
+    if (!isAuthenticated) {
+      showLoginRequired({
+        title: "Login Required to Book",
+        message: `You need to be logged in to book "${destination.name}". Please sign in or create an account to continue with your booking.`,
+        actionText: "book this destination"
+      });
+      return;
+    }
+
+    // Convert destination to BookingDestination format
+    const bookingDestination: BookingDestination = {
+      id: destination.id.toString(),
+      name: destination.name,
+      destination: destination.name,
+      location: destination.location,
+      price: parseInt(destination.price.replace(/[^\d]/g, '')), // Extract price from string
+      originalPrice: parseInt(destination.price.replace(/[^\d]/g, '')) * 1.2, // Mock original price
+      duration: destination.duration,
+      groupSize: '2-8 people',
+      image: destination.image,
+      description: destination.description,
+      highlights: ['Great Experience', 'Professional Guide', 'Memorable Journey'],
+      rating: destination.rating,
+      reviews: 100,
+      category: 'Adventure'
+    };
+
+    setSelectedDestination(bookingDestination);
+    setBookingModalOpen(true);
+  };
+
+  const handleViewAllDestinations = () => {
+    router.push('/destinations');
+  };
+
   return (
+    <>
+      <LoginRequiredModal />
+      {selectedDestination && (
+        <BookingModal
+          isOpen={bookingModalOpen}
+          onClose={() => {
+            setBookingModalOpen(false);
+            setSelectedDestination(null);
+          }}
+          destination={selectedDestination}
+          onBookingComplete={(bookingId) => {
+            console.log('Booking completed:', bookingId);
+            // Could redirect to booking details or show success message
+          }}
+        />
+      )}
     <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
       <div className="container mx-auto px-3 sm:px-4">
         {/* Section Header */}
@@ -133,10 +197,11 @@ const PopularDestinations = () => {
                   </span>
                   <Button 
                     size="sm" 
+                    onClick={() => handleBookDestination(destination)}
                     className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 transition-colors duration-200"
                   >
-                    <span className="hidden sm:inline">View Details</span>
-                    <span className="sm:hidden">View</span>
+                    <span className="hidden sm:inline">Book Now</span>
+                    <span className="sm:hidden">Book</span>
                   </Button>
                 </div>
               </CardContent>
@@ -149,6 +214,7 @@ const PopularDestinations = () => {
           <Button 
             variant="outline" 
             size="lg" 
+            onClick={handleViewAllDestinations}
             className="border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base"
           >
             View All Destinations
@@ -156,6 +222,7 @@ const PopularDestinations = () => {
         </div>
       </div>
     </section>
+    </>
   );
 };
 

@@ -5,7 +5,7 @@ const HeroSection = () => {
   return (
     <section className="relative h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: 'url("https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&fit=crop")'
@@ -25,7 +25,7 @@ const HeroSection = () => {
             with SafarSaga
           </h2>
         </div>
-        
+
         {/* Subheading */}
         <p className="text-lg sm:text-xl md:text-2xl mb-12 text-white/90 max-w-3xl mx-auto leading-relaxed animate-slide-in-up" style={{ animationDelay: '0.4s' }}>
           Discover incredible destinations across India with our expertly crafted travel packages
