@@ -797,25 +797,45 @@ class SupabaseService:
                     if not booking_data:
                         return None
                     
-                    # Manually join destination and event data
+                    # Manually join user, destination, and event data
                     enriched_booking = booking_data.copy()
+                    
+                    # Get user data if user_id exists
+                    if booking_data.get('user_id'):
+                        try:
+                            user_response = self._get_client().table("users").select("id, email, full_name").eq("id", booking_data['user_id']).execute()
+                            if user_response.data:
+                                user_data = user_response.data[0]
+                                enriched_booking['user_name'] = user_data.get('full_name')
+                                enriched_booking['user_email'] = user_data.get('email')
+                        except Exception as user_error:
+                            print(f"Warning: Could not fetch user {booking_data.get('user_id')}: {str(user_error)}")
+                            enriched_booking['user_name'] = None
+                            enriched_booking['user_email'] = None
                     
                     # Get destination data if destination_id exists
                     if booking_data.get('destination_id'):
                         try:
                             dest_response = self._get_client().table("destinations").select("*").eq("id", booking_data['destination_id']).execute()
                             if dest_response.data:
-                                enriched_booking['destination'] = dest_response.data[0]
+                                dest_data = dest_response.data[0]
+                                enriched_booking['destination'] = dest_data
+                                enriched_booking['destination_name'] = dest_data.get('name')
                         except Exception as dest_error:
                             print(f"Warning: Could not fetch destination {booking_data.get('destination_id')}: {str(dest_error)}")
                             enriched_booking['destination'] = None
+                            enriched_booking['destination_name'] = None
                     
                     # Get event data if event_id exists
                     if booking_data.get('event_id'):
                         try:
                             event_response = self._get_client().table("events").select("*").eq("id", booking_data['event_id']).execute()
                             if event_response.data:
-                                enriched_booking['event'] = event_response.data[0]
+                                event_data = event_response.data[0]
+                                enriched_booking['event'] = event_data
+                                # If no destination_name, use event name
+                                if not enriched_booking.get('destination_name'):
+                                    enriched_booking['destination_name'] = event_data.get('name')
                         except Exception as event_error:
                             print(f"Warning: Could not fetch event {booking_data.get('event_id')}: {str(event_error)}")
                             enriched_booking['event'] = None
@@ -1151,15 +1171,24 @@ class SupabaseService:
             
             destinations_data = await self._run_sync(_get_destinations)
             
-            # Convert to Destination objects
-            destinations = [Destination(**dest) for dest in destinations_data]
+            # Convert to Destination objects with error handling
+            destinations = []
+            for dest in destinations_data:
+                try:
+                    destinations.append(Destination(**dest))
+                except Exception as conv_error:
+                    print(f"Warning: Could not convert destination data: {str(conv_error)}")
+                    print(f"Destination data: {dest}")
+                    # Skip invalid destination data
+                    continue
             
             # Get total count (simplified)
-            total = len(destinations_data)
+            total = len(destinations)
             
             return destinations, total
             
         except Exception as e:
+            print(f"Error in get_destinations: {str(e)}")
             raise handle_supabase_error(e, "get destinations")
     
     async def get_destination_by_id(self, destination_id: str) -> Optional[Destination]:

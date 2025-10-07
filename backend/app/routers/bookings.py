@@ -719,6 +719,163 @@ async def update_booking(
         )
 
 
+@router.post(
+    "/{booking_id}/confirm-payment",
+    tags=["Admin"],
+    summary="Confirm Payment",
+    description="Confirm payment for a booking (Admin only)",
+    status_code=status.HTTP_200_OK
+)
+async def confirm_payment(
+    booking_id: str,
+    current_user: User = Depends(get_admin_user)
+):
+    """
+    Confirm payment for a booking.
+    
+    - **booking_id**: UUID of the booking
+    
+    **Admin Only**: Requires admin privileges.
+    
+    **Actions:**
+    - Updates payment_status to 'paid'
+    - Updates booking_status to 'confirmed'
+    - Sets payment_confirmed_at timestamp
+    """
+    try:
+        # Get existing booking
+        existing_booking = await supabase_service.get_booking_by_id(booking_id)
+        if not existing_booking:
+            raise NotFoundException("Booking", booking_id)
+        
+        # Update booking with payment confirmation
+        update_data = {
+            "payment_status": PaymentStatus.PAID.value,
+            "booking_status": BookingStatus.CONFIRMED.value,
+            "payment_confirmed_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        updated_booking = await supabase_service.update_booking(booking_id, update_data)
+        
+        return {"message": "Payment confirmed successfully", "booking": updated_booking}
+        
+    except NotFoundException:
+        raise
+    except Exception as e:
+        logger.error(f"Error confirming payment for booking {booking_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to confirm payment: {str(e)}"
+        )
+
+
+@router.get(
+    "/{booking_id}/payment-info",
+    tags=["Admin"],
+    summary="Get Payment Info",
+    description="Get payment information for a booking (Admin only)"
+)
+async def get_payment_info(
+    booking_id: str,
+    current_user: User = Depends(get_admin_user)
+):
+    """
+    Get payment information for a booking.
+    
+    - **booking_id**: UUID of the booking
+    
+    **Admin Only**: Requires admin privileges.
+    """
+    try:
+        booking = await supabase_service.get_booking_by_id(booking_id)
+        if not booking:
+            raise NotFoundException("Booking", booking_id)
+        
+        # Get user info
+        user = await supabase_service.get_user_by_id(booking.user_id)
+        
+        return {
+            "booking_id": booking.id,
+            "amount": booking.total_amount,
+            "currency": "INR",
+            "payment_method": None,  # Not yet implemented in database
+            "transaction_id": None,  # Not yet implemented in database
+            "payment_date": booking.payment_confirmed_at,  # Use confirmation date as payment date
+            "payment_confirmed_at": booking.payment_confirmed_at,
+            "payer_name": user.full_name if user else "Unknown",
+            "payer_email": user.email if user else "Unknown",
+            "payment_proof_url": None,  # Not yet implemented in database
+            "notes": booking.special_requests
+        }
+        
+    except NotFoundException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching payment info for booking {booking_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch payment info: {str(e)}"
+        )
+
+
+class RejectPaymentRequest(BaseModel):
+    """Request model for rejecting payment"""
+    reason: str
+
+
+@router.post(
+    "/{booking_id}/reject-payment",
+    tags=["Admin"],
+    summary="Reject Payment",
+    description="Reject payment for a booking (Admin only)",
+    status_code=status.HTTP_200_OK
+)
+async def reject_payment(
+    booking_id: str,
+    request: RejectPaymentRequest,
+    current_user: User = Depends(get_admin_user)
+):
+    """
+    Reject payment for a booking.
+    
+    - **booking_id**: UUID of the booking
+    - **reason**: Reason for rejection
+    
+    **Admin Only**: Requires admin privileges.
+    
+    **Actions:**
+    - Cancels the booking
+    - Adds rejection reason to special_requests
+    """
+    try:
+        # Get existing booking
+        existing_booking = await supabase_service.get_booking_by_id(booking_id)
+        if not existing_booking:
+            raise NotFoundException("Booking", booking_id)
+        
+        # Update booking with rejection
+        rejection_note = f"Payment rejected by admin: {request.reason}"
+        existing_requests = existing_booking.special_requests or ""
+        
+        update_data = {
+            "booking_status": BookingStatus.CANCELLED.value,
+            "special_requests": f"{existing_requests}\n{rejection_note}".strip()
+        }
+        
+        updated_booking = await supabase_service.update_booking(booking_id, update_data)
+        
+        return {"message": "Payment rejected successfully", "booking": updated_booking}
+        
+    except NotFoundException:
+        raise
+    except Exception as e:
+        logger.error(f"Error rejecting payment for booking {booking_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to reject payment: {str(e)}"
+        )
+
+
 @router.delete(
     "/{booking_id}",
     tags=["Bookings"],

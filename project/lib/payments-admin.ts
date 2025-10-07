@@ -71,8 +71,16 @@ export class PaymentsAdminService {
       }
 
       const response = await adminApi.get('/api/bookings/', { params })
+      
+      // Map booking data to payment format
+      const items = (response.data.items || []).map((booking: any) => ({
+        ...booking,
+        booking_id: booking.id,
+        amount: booking.total_amount,
+      }))
+      
       return {
-        items: response.data.items || [],
+        items,
         total: response.data.total || 0
       }
     } catch (error) {
@@ -81,16 +89,15 @@ export class PaymentsAdminService {
   }
 
   /**
-   * Reject payment (update booking with rejection reason)
+   * Reject payment (cancel booking with rejection reason)
    */
   static async rejectPayment(
     bookingId: string,
     reason: string
   ): Promise<void> {
     try {
-      await adminApi.put(`/api/bookings/${bookingId}`, {
-        special_requests: `Payment rejected: ${reason}`,
-        payment_status: 'unpaid'
+      await adminApi.post(`/api/bookings/${bookingId}/reject-payment`, {
+        reason
       })
     } catch (error) {
       throw new Error(getErrorMessage(error))

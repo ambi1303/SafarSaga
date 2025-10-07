@@ -38,7 +38,7 @@ const mockDestinations = [
     duration: '3N/4D',
     rating: 4.8,
     reviews: 124,
-    image: 'https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
+    image:'https://liveb4youdie.com/wp-content/uploads/2021/10/lk3gk710you9ms5vu287emjabfd3_0001-5078545066_20210730_154224_0000.jpg',
     description: 'Experience the breathtaking beauty of Manali with our guided adventure trek through scenic mountain trails.',
     highlights: ['Trekking', 'Mountain Views', 'Local Culture'],
     bestTime: 'Oct-Feb',
@@ -55,7 +55,7 @@ const mockDestinations = [
     duration: '3N/4D',
     rating: 4.7,
     reviews: 89,
-    image: 'https://images.pexels.com/photos/1761279/pexels-photo-1761279.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
+    image:'',
     description: 'Relax and unwind on the pristine beaches of Goa with our all-inclusive beach holiday package.',
     highlights: ['Beach Activities', 'Water Sports', 'Nightlife'],
     bestTime: 'Nov-Mar',
@@ -151,16 +151,15 @@ export default function DestinationsPage() {
         setDestinations(uiDestinations);
         setFilteredDestinations(uiDestinations);
       } else {
-        // Use mock destinations as fallback
-        console.log('No backend destinations found, using mock data');
-        setDestinations(mockDestinations);
-        setFilteredDestinations(mockDestinations);
+        // Remove fallback to mockDestinations
+        setDestinations([]);
+        setFilteredDestinations([]);
       }
     } catch (error) {
       console.error('Failed to load destinations:', error);
-      // Use mock destinations as fallback
-      setDestinations(mockDestinations);
-      setFilteredDestinations(mockDestinations);
+      // Remove fallback to mockDestinations
+      setDestinations([]);
+      setFilteredDestinations([]);
     } finally {
       setLoading(false);
     }

@@ -129,7 +129,24 @@ class Booking(BaseModel):
     travel_date: Optional[str] = None
     special_requests: Optional[str] = None
     booked_at: str
+    created_at: Optional[str] = None  # Alias for booked_at or separate field
+    updated_at: Optional[str] = None
     payment_confirmed_at: Optional[str] = None
+    
+    # Enriched fields (populated by joins)
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+    destination_name: Optional[str] = None
+    
+    @validator("created_at", pre=True, always=True)
+    def set_created_at(cls, v, values):
+        """Set created_at from booked_at if not provided"""
+        if v is None and 'booked_at' in values:
+            return values['booked_at']
+        return v
+    
+    class Config:
+        extra = "ignore"  # Ignore extra fields from database
 
 class User(BaseModel):
     """User model"""
@@ -143,12 +160,24 @@ class Destination(BaseModel):
     """Destination model"""
     id: str
     name: str
-    location: str
+    location: Optional[str] = None
+    state: Optional[str] = None
     description: Optional[str] = None
     average_cost_per_day: Optional[Decimal] = None
     difficulty_level: Optional[DifficultyLevel] = None
     is_active: bool = True
     created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    
+    @validator("difficulty_level", pre=True)
+    def normalize_difficulty(cls, v):
+        """Normalize difficulty level to lowercase for case-insensitive matching"""
+        if isinstance(v, str):
+            return v.lower()
+        return v
+    
+    class Config:
+        extra = "ignore"  # Ignore extra fields from database
 
 class DestinationCreate(BaseModel):
     """Model for creating destinations"""
