@@ -3,6 +3,7 @@ Destinations routes for SafarSaga API
 """
 
 from fastapi import APIRouter, HTTPException, Depends, status, Query
+from fastapi.responses import JSONResponse
 from typing import Optional, List
 from decimal import Decimal
 
@@ -24,6 +25,37 @@ supabase_service = SupabaseService()
 
 
 @router.get(
+    "/search",
+    response_model=List[Destination],
+    tags=["Destinations"],
+    summary="Search Destinations",
+    description="Search destinations by name or description"
+)
+async def search_destinations(
+    query: str = Query(..., min_length=2, description="Search term (minimum 2 characters)"),
+    limit: int = Query(10, ge=1, le=50, description="Maximum results"),
+    current_user: Optional[User] = Depends(get_optional_user)
+):
+    """
+    Search destinations by name or description.
+    
+    - **query**: Search term (minimum 2 characters)
+    - **limit**: Maximum number of results (1-50, default: 10)
+    
+    Returns list of matching destinations.
+    """
+    try:
+        destinations = await supabase_service.search_destinations(query.strip(), limit)
+        return destinations
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to search destinations: {str(e)}"
+        )
+
+
+@router.get(
     "/",
     response_model=PaginatedResponse,
     tags=["Destinations"],
@@ -35,7 +67,7 @@ async def get_destinations(
     difficulty: Optional[DifficultyLevel] = Query(None, description="Filter by difficulty level"),
     min_cost: Optional[Decimal] = Query(None, ge=0, description="Minimum cost per day filter"),
     max_cost: Optional[Decimal] = Query(None, ge=0, description="Maximum cost per day filter"),
-    is_active: bool = Query(True, description="Active destinations only"),
+    is_active: Optional[bool] = Query(True, description="Active destinations only"),
     limit: int = Query(20, ge=1, le=100, description="Number of items per page"),
     offset: int = Query(0, ge=0, description="Offset from start"),
     current_user: Optional[User] = Depends(get_optional_user)
@@ -114,15 +146,15 @@ async def get_destination(
         destination = await supabase_service.get_destination_by_id(destination_id)
         
         if not destination:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Destination not found"
-            )
+            raise NotFoundException(f"Destination with ID {destination_id} not found")
         
         return destination
         
-    except HTTPException:
-        raise
+    except NotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Destination with ID {destination_id} not found"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -146,7 +178,7 @@ async def create_destination(
     Create new destination.
     
     **Required fields:**
-    - **name**: Destination name
+    - **name**: Destination name (unique)
     
     **Optional fields:**
     - **description**: Destination description
@@ -162,8 +194,22 @@ async def create_destination(
     Requires admin privileges.
     """
     try:
+        # Validate required fields
+        if not destination_data.name or not destination_data.name.strip():
+            raise ValidationException("Destination name is required")
+        
         # Prepare destination data
         create_data = destination_data.dict(exclude_none=True)
+        
+        # Ensure name is trimmed
+        create_data['name'] = create_data['name'].strip()
+        
+        # Set default values
+        if 'country' not in create_data or not create_data['country']:
+            create_data['country'] = 'India'
+        
+        if 'is_active' not in create_data:
+            create_data['is_active'] = True
         
         # Create destination
         destination = await supabase_service.create_destination(create_data)
@@ -173,6 +219,11 @@ async def create_destination(
     except ValidationException as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e)
+        )
+    except BusinessLogicException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
     except Exception as e:
@@ -218,34 +269,67 @@ async def update_destination(
         # Get existing destination
         existing_destination = await supabase_service.get_destination_by_id(destination_id)
         if not existing_destination:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Destination not found"
-            )
+            raise NotFoundException(f"Destination with ID {destination_id} not found")
         
-        # Prepare update data
+        # Prepare update data (only include fields that were set)
         update_data = destination_data.dict(exclude_unset=True, exclude_none=True)
         
         if not update_data:
             raise ValidationException("No valid fields to update")
+        
+        # Trim name if provided
+        if 'name' in update_data:
+            update_data['name'] = update_data['name'].strip()
+            if not update_data['name']:
+                raise ValidationException("Destination name cannot be empty")
         
         # Update destination
         updated_destination = await supabase_service.update_destination(destination_id, update_data)
         
         return updated_destination
         
+    except NotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Destination with ID {destination_id} not found"
+        )
     except ValidationException as e:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e)
         )
-    except HTTPException:
-        raise
+    except BusinessLogicException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update destination: {str(e)}"
         )
+
+
+@router.patch(
+    "/{destination_id}",
+    response_model=Destination,
+    tags=["Destinations"],
+    summary="Partially Update Destination",
+    description="Partially update destination details (Admin only)"
+)
+async def patch_destination(
+    destination_id: str,
+    destination_data: DestinationUpdate,
+    current_user: User = Depends(get_admin_user)
+):
+    """
+    Partially update destination details (same as PUT for this implementation).
+    
+    - **destination_id**: UUID of the destination to update
+    
+    Requires admin privileges.
+    """
+    return await update_destination(destination_id, destination_data, current_user)
 
 
 @router.delete(
@@ -257,16 +341,19 @@ async def update_destination(
 )
 async def delete_destination(
     destination_id: str,
+    hard_delete: bool = Query(False, description="Permanently delete (true) or soft delete (false)"),
     current_user: User = Depends(get_admin_user)
 ):
     """
     Delete a destination.
     
     - **destination_id**: UUID of the destination to delete
+    - **hard_delete**: If true, permanently delete; if false, soft delete (default)
     
     **Business Rules:**
     - Cannot delete destinations with active bookings
-    - Soft delete by setting is_active to false
+    - Default is soft delete (sets is_active to false)
+    - Hard delete requires explicit confirmation
     
     Requires admin privileges.
     """
@@ -274,22 +361,38 @@ async def delete_destination(
         # Get existing destination
         existing_destination = await supabase_service.get_destination_by_id(destination_id)
         if not existing_destination:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Destination not found"
+            raise NotFoundException(f"Destination with ID {destination_id} not found")
+        
+        # Check for active bookings (implement in service layer)
+        has_active_bookings = await supabase_service.destination_has_active_bookings(destination_id)
+        if has_active_bookings:
+            raise BusinessLogicException(
+                "Cannot delete destination with active bookings. "
+                "Please wait for bookings to complete or cancel them first."
             )
         
-        # Check for active bookings
-        # This would need to be implemented in the service layer
-        # For now, we'll do a soft delete
+        if hard_delete:
+            # Hard delete - permanently remove from database
+            await supabase_service.delete_destination(destination_id)
+        else:
+            # Soft delete - set is_active to false
+            await supabase_service.update_destination(destination_id, {"is_active": False})
         
-        # Soft delete by setting is_active to false
-        await supabase_service.update_destination(destination_id, {"is_active": False})
+        return JSONResponse(
+            status_code=status.HTTP_204_NO_CONTENT,
+            content=None
+        )
         
-        return {"message": "Destination deleted successfully"}
-        
-    except HTTPException:
-        raise
+    except NotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Destination with ID {destination_id} not found"
+        )
+    except BusinessLogicException as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -318,10 +421,7 @@ async def get_destination_activities(
         destination = await supabase_service.get_destination_by_id(destination_id)
         
         if not destination:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Destination not found"
-            )
+            raise NotFoundException(f"Destination with ID {destination_id} not found")
         
         return {
             "destination_id": destination.id,
@@ -332,50 +432,13 @@ async def get_destination_activities(
             "average_cost_per_day": destination.average_cost_per_day
         }
         
-    except HTTPException:
-        raise
+    except NotFoundException:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Destination with ID {destination_id} not found"
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch destination activities: {str(e)}"
-        )
-
-
-@router.get(
-    "/search/{query}",
-    response_model=List[Destination],
-    tags=["Destinations"],
-    summary="Search Destinations",
-    description="Search destinations by name or description"
-)
-async def search_destinations(
-    query: str,
-    limit: int = Query(10, ge=1, le=50, description="Maximum results"),
-    current_user: Optional[User] = Depends(get_optional_user)
-):
-    """
-    Search destinations by name or description.
-    
-    - **query**: Search term
-    - **limit**: Maximum number of results (1-50, default: 10)
-    
-    Returns list of matching destinations.
-    """
-    try:
-        if len(query.strip()) < 2:
-            raise ValidationException("Search query must be at least 2 characters")
-        
-        destinations = await supabase_service.search_destinations(query, limit)
-        
-        return destinations
-        
-    except ValidationException as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e)
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to search destinations: {str(e)}"
         )

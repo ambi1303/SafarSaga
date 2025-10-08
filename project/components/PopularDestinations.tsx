@@ -1,69 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLoginRequired } from '@/components/auth/LoginRequiredModal';
 import { BookingModal } from '@/components/booking/BookingModal';
 import { BookingDestination } from '@/lib/booking-service';
+import { DestinationsService, Destination } from '@/lib/destinations-service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { MapPin, Star } from 'lucide-react';
+import { MapPin, Star, Loader2 } from 'lucide-react';
 import { FadeIn, StaggerContainer } from '@/components/ScrollAnimations';
 
-const destinations = [
-  {
-    id: 1,
-    name: 'Manali, Himachal Pradesh',
-    location: 'Himachal Pradesh',
-    description: 'Snow-capped mountains, adventure sports, and scenic valleys',
-    image: 'https://c.ndtvimg.com/2025-05/tvo5sgd_manali_625x300_01_May_25.jpg?im=FaceCrop,algorithm=dnn,width=1200,height=738',
-    rating: 4.8,
-    price: 'From ₹5499',
-    duration: '3N/4D'
-  },
-  {
-    id: 2,
-    name: 'Srinagar, Kashmir',
-    location: 'Jammu & Kashmir',
-    description: 'Paradise on earth with pristine lakes and houseboats',
-    image:'https://imagedelivery.net/y9EHf1toWJTBqJVsQzJU4g/www.indianholiday.com/2025/06/places-to-visit-in-srinagar.png/w=700,h=304',
-    rating: 4.9,
-    price: 'From ₹14,999',
-    duration: '5N/6D'
-  },
-  {
-    id: 3,
-    name: 'Jaipur, Rajasthan',
-    location: 'Rajasthan',
-    description: 'Royal palaces, desert safaris, and rich cultural heritage',
-    image:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/East_facade_Hawa_Mahal_Jaipur_from_ground_level_%28July_2022%29_-_img_01.jpg/1200px-East_facade_Hawa_Mahal_Jaipur_from_ground_level_%28July_2022%29_-_img_01.jpg',
-    rating: 4.7,
-    price: 'From ₹5,999',
-    duration: '4N/5D'
-  },
-  {
-    id: 4,
-    name: 'Goa Beaches',
-    location: 'Goa',
-    description: 'Pristine beaches, water sports, and vibrant nightlife',
-    image: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/18/3e/36/95/baga-sea-beach.jpg?w=600&h=-1&s=1',
-    rating: 4.6,
-    price: 'From ₹10,999',
-    duration: '4N/5D'
-  },
-  
-  {
-    id: 5,
-    name: 'Leh, Ladakh',
-    location: 'Ladakh',
-    description: 'High altitude desert, pristine lakes, and ancient monasteries',
-    image: 'https://discoverlehladakh.in/wp-content/uploads/2025/04/Leh-Ladakh-in-June-month-1140x530.jpg',
-    rating: 4.9,
-    price: 'From ₹14,999',
-    duration: '7N/8D'
-  }
-];
+// Default placeholder image for destinations without images
+const DEFAULT_PLACEHOLDER = '/images/placeholder-destination.svg';
 
 const PopularDestinations = () => {
   const router = useRouter();
@@ -71,6 +21,44 @@ const PopularDestinations = () => {
   const { showLoginRequired, LoginRequiredModal } = useLoginRequired();
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
   const [selectedDestination, setSelectedDestination] = useState<BookingDestination | null>(null);
+  const [destinations, setDestinations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch destinations from backend on component mount
+  useEffect(() => {
+    loadDestinations();
+  }, []);
+
+  const loadDestinations = async () => {
+    try {
+      setLoading(true);
+      const response = await DestinationsService.getDestinations({
+        is_active: true,
+        limit: 6 // Show top 6 destinations
+      });
+
+      if (response.items && response.items.length > 0) {
+        // Convert backend destinations to UI format
+        const uiDestinations = response.items.map((dest: Destination) => ({
+          id: dest.id,
+          name: dest.name,
+          location: dest.state || 'India',
+          description: dest.description || 'Amazing travel experience awaits you',
+          image: dest.featured_image_url || DEFAULT_PLACEHOLDER,
+          rating: 4.8, // Mock rating - can be added to backend later
+          price: `From ₹${(dest.average_cost_per_day || 5999).toLocaleString()}`,
+          duration: '3N/4D' // Default duration - can be added to backend later
+        }));
+        setDestinations(uiDestinations);
+      }
+    } catch (error) {
+      console.error('Failed to load destinations:', error);
+      // Keep empty array on error
+      setDestinations([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleBookDestination = (destination: any) => {
     if (!isAuthenticated) {
@@ -141,8 +129,30 @@ const PopularDestinations = () => {
         </div>
 
         {/* Destinations Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-          {destinations.map((destination, index) => (
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            {[...Array(6)].map((_, index) => (
+              <Card key={index} className="overflow-hidden animate-pulse">
+                <div className="w-full h-48 sm:h-56 lg:h-64 bg-gray-200"></div>
+                <CardContent className="p-4 sm:p-5">
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded mb-4 w-3/4"></div>
+                  <div className="flex items-center justify-between">
+                    <div className="h-6 bg-gray-200 rounded w-24"></div>
+                    <div className="h-8 bg-gray-200 rounded w-20"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : destinations.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-600">No destinations available at the moment.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            {destinations.map((destination, index) => (
             <Card 
               key={destination.id} 
               className="group overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer"
@@ -207,19 +217,22 @@ const PopularDestinations = () => {
               </CardContent>
             </Card>
           ))}
-        </div>
+          </div>
+        )}
 
         {/* View All Button */}
-        <div className="text-center mt-8 sm:mt-10 lg:mt-12">
-          <Button 
-            variant="outline" 
-            size="lg" 
-            onClick={handleViewAllDestinations}
-            className="border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base"
-          >
-            View All Destinations
-          </Button>
-        </div>
+        {!loading && destinations.length > 0 && (
+          <div className="text-center mt-8 sm:mt-10 lg:mt-12">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={handleViewAllDestinations}
+              className="border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-base"
+            >
+              View All Destinations
+            </Button>
+          </div>
+        )}
       </div>
     </section>
     </>

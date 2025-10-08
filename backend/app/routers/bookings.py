@@ -3,14 +3,14 @@ Bookings/Tickets routes for SafarSaga API
 """
 
 import logging
-from fastapi import APIRouter, HTTPException, Depends, status, Query, Response
+from fastapi import APIRouter, HTTPException, Depends, status, Query, Response,Body
 from typing import Optional, List
 from decimal import Decimal
 from datetime import datetime, timezone
 
 from app.models import (
     Booking, BookingCreate, BookingUpdate, BookingStatus, PaymentStatus,
-    PaginatedResponse, User, Event, Destination
+    PaginatedResponse, User, Event, Destination, BookingBusinessRules
 )
 from pydantic import BaseModel
 from app.middleware.auth import get_current_user, get_admin_user
@@ -20,7 +20,8 @@ from app.exceptions import (
     ValidationException, 
     BusinessLogicException,
     CapacityException,
-    ConflictException
+    ConflictException,
+    AuthorizationException
 )
 # Using consolidated exceptions instead of booking_errors
 # from app.booking_errors import (...) - removed to use unified exceptions
@@ -295,7 +296,6 @@ async def get_booking(
         
         # Check access permissions
         if not current_user.is_admin and booking.user_id != current_user.id:
-            from app.exceptions import AuthorizationException
             raise AuthorizationException("Access denied: You can only view your own bookings")
         
         return booking
@@ -341,9 +341,6 @@ async def create_booking(
     """
 
     try:
-        # Import validation functions from models
-        from app.models import BookingBusinessRules
-        
         # Get destination details
         destination = await supabase_service.get_destination_by_id(booking_data.destination_id)
         
@@ -357,32 +354,11 @@ async def create_booking(
                 "destination_inactive"
             )
         
-        # 🔒 SAFETY: Ensure seats is integer before calculation (double-check)
-        seats_for_calculation = booking_data.seats
-        if isinstance(seats_for_calculation, str):
-            try:
-                seats_for_calculation = int(seats_for_calculation.strip())
-            except (ValueError, AttributeError):
-                raise ValidationException(
-                    f"Invalid seat count: '{seats_for_calculation}' is not a valid number",
-                    field="seats",
-                    value=seats_for_calculation
-                )
-        elif isinstance(seats_for_calculation, float):
-            if seats_for_calculation.is_integer():
-                seats_for_calculation = int(seats_for_calculation)
-            else:
-                raise ValidationException(
-                    f"Seat count must be a whole number: {seats_for_calculation}",
-                    field="seats",
-                    value=seats_for_calculation
-                )
-        
-        # Calculate booking amount (with safely converted seats)
+        # Calculate booking amount (Pydantic already validated seats)
         duration_days = 3  # Default duration for destination bookings
         total_amount = BookingBusinessRules.calculate_booking_amount(
             destination.average_cost_per_day, 
-            seats_for_calculation, 
+            booking_data.seats, 
             duration_days
         )
         
@@ -428,155 +404,12 @@ async def create_booking(
             except ValueError:
                 travel_date_iso = booking_data.travel_date
         
-        # Enhanced validation with detailed logging and error handling
-        print(f"DEBUG - Incoming booking_data.seats: {booking_data.seats} (type: {type(booking_data.seats)})")
-        
-        # Robust seats validation with comprehensive error handling
-        try:
-            seats_value = booking_data.seats
-            
-            # Handle different input types
-            if isinstance(seats_value, str):
-                # Handle string conversion with detailed validation
-                seats_value = seats_value.strip()
-                
-                # Check for empty string
-                if not seats_value:
-                    raise ValidationException(
-                        "Seat count cannot be empty", 
-                        field="seats", 
-                        value=booking_data.seats
-                    )
-                
-                # Check for non-numeric strings
-                if not seats_value.isdigit():
-                    # Check for common invalid inputs
-                    if seats_value.lower() in ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']:
-                        raise ValidationException(
-                            f"Please enter seat count as a number, not as text: '{seats_value}'",
-                            field="seats",
-                            value=seats_value
-                        )
-                    elif '.' in seats_value:
-                        raise ValidationException(
-                            f"Seat count must be a whole number, not a decimal: '{seats_value}'",
-                            field="seats",
-                            value=seats_value
-                        )
-                    else:
-                        raise ValidationException(
-                            f"Invalid seat count: '{seats_value}' is not a valid number",
-                            field="seats",
-                            value=seats_value
-                        )
-                
-                # Convert to integer
-                seats_int = int(seats_value)
-                
-            elif isinstance(seats_value, float):
-                # Handle float conversion
-                if not seats_value.is_integer():
-                    raise ValidationException(
-                        f"Seat count must be a whole number, not a decimal: {seats_value}",
-                        field="seats",
-                        value=seats_value
-                    )
-                seats_int = int(seats_value)
-                
-            elif isinstance(seats_value, int):
-                # Already an integer
-                seats_int = seats_value
-                
-            else:
-                # Unsupported type
-                raise ValidationException(
-                    f"Invalid seat count data type: {type(seats_value).__name__}. Expected number.",
-                    field="seats",
-                    value=str(seats_value)
-                )
-            
-            # Validate seats range with specific error messages
-            if seats_int < 1:
-                raise ValidationException(
-                    f"Number of seats must be at least 1, got: {seats_int}",
-                    field="seats",
-                    value=seats_int
-                )
-            elif seats_int > 10:
-                raise ValidationException(
-                    f"Number of seats cannot exceed 10, got: {seats_int}",
-                    field="seats",
-                    value=seats_int
-                )
-                
-        except ValidationException:
-            # Re-raise ValidationException as-is
-            raise
-        except (ValueError, TypeError) as e:
-            # Handle unexpected conversion errors
-            raise ValidationException(
-                f"Failed to process seat count: {str(e)}",
-                field="seats",
-                value=str(booking_data.seats)
-            )
-        
-        print(f"DEBUG - Successfully converted seats: {seats_int} (type: {type(seats_int)})")
-        
-        # Validate and convert total_amount
-        try:
-            total_amount_float = float(total_amount)
-            if total_amount_float < 0:
-                raise ValidationException(
-                    f"Total amount cannot be negative: {total_amount_float}",
-                    field="total_amount",
-                    value=total_amount_float
-                )
-            elif total_amount_float == 0:
-                raise ValidationException(
-                    "Total amount cannot be zero. Please check destination pricing.",
-                    field="total_amount",
-                    value=total_amount_float
-                )
-        except (ValueError, TypeError) as e:
-            raise ValidationException(
-                f"Invalid total amount calculation: {str(e)}",
-                field="total_amount",
-                value=str(total_amount)
-            )
-        
-        # Validate contact info if provided
-        if booking_data.contact_info:
-            contact_info = booking_data.contact_info
-            
-            # Validate phone number
-            if not contact_info.phone or not contact_info.phone.strip():
-                raise ValidationException(
-                    "Phone number is required",
-                    field="contact_info.phone",
-                    value=contact_info.phone
-                )
-            
-            # Basic phone number format validation
-            phone_digits = contact_info.phone.replace('+', '').replace('-', '').replace(' ', '').replace('(', '').replace(')', '')
-            if not phone_digits.isdigit():
-                raise ValidationException(
-                    "Phone number must contain only digits, spaces, hyphens, parentheses, and plus sign",
-                    field="contact_info.phone",
-                    value=contact_info.phone
-                )
-            
-            if len(phone_digits) < 10 or len(phone_digits) > 15:
-                raise ValidationException(
-                    f"Phone number must be between 10 and 15 digits, got {len(phone_digits)} digits",
-                    field="contact_info.phone",
-                    value=contact_info.phone
-                )
-        
+        # Prepare create data (Pydantic has already validated all fields)
         create_data = {
             "user_id": current_user.id,
             "destination_id": booking_data.destination_id,
-            "seats": seats_int,  # Use the safely converted integer
-            "total_amount": total_amount_float,  # Use the validated float
+            "seats": booking_data.seats,
+            "total_amount": float(total_amount),
             "special_requests": booking_data.special_requests,
             "contact_info": booking_data.contact_info.model_dump() if booking_data.contact_info else None,
             "travel_date": travel_date_iso,
@@ -584,47 +417,20 @@ async def create_booking(
             "payment_status": PaymentStatus.UNPAID.value
         }
         
-        print(f"DEBUG - Final create_data validation:")
-        print(f"  - seats: {create_data['seats']} (type: {type(create_data['seats'])})")
-        print(f"  - total_amount: {create_data['total_amount']} (type: {type(create_data['total_amount'])})")
-        print(f"  - destination_id: {create_data['destination_id']} (type: {type(create_data['destination_id'])})")
-        
         # Create destination booking
         booking = await supabase_service.create_destination_booking(create_data)
         
         return booking
         
-    except ValidationException as e:
-        # ValidationException should propagate to global exception handler
-        # Log the validation error for debugging
-        print(f"DEBUG - ValidationException caught: {e.message}")
-        print(f"  - Field: {e.details.get('field', 'unknown')}")
-        print(f"  - Value: {e.details.get('value', 'unknown')}")
-        raise e
-    except (BusinessLogicException, CapacityException) as e:
-        # These should also propagate to global exception handler
-        print(f"DEBUG - Business/Capacity Exception caught: {str(e)}")
-        raise e
+    except (ValidationException, BusinessLogicException, CapacityException, ConflictException, NotFoundException):
+        # Let these propagate to global exception handler
+        raise
     except Exception as e:
-        # Log unexpected errors with more context
-        print(f"DEBUG - Unexpected error in create_booking: {str(e)}")
-        print(f"  - Error type: {type(e).__name__}")
-        import traceback
-        print(f"  - Traceback: {traceback.format_exc()}")
-        
-        # Convert to a more specific exception if possible
-        error_message = str(e).lower()
-        if "integer" in error_message and "str" in error_message:
-            raise ValidationException(
-                "Data type conversion error. Please ensure all numeric fields contain valid numbers.",
-                field="data_conversion",
-                value=str(e)
-            )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to create booking: {str(e)}"
-            )
+        logger.error(f"Unexpected error in create_booking: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create booking: {str(e)}"
+        )
 
 
 @router.put(
@@ -721,102 +527,72 @@ async def update_booking(
 
 @router.post(
     "/{booking_id}/confirm-payment",
-    tags=["Admin"],
-    summary="Confirm Payment",
-    description="Confirm payment for a booking (Admin only)",
-    status_code=status.HTTP_200_OK
+    tags=["Bookings"],
+    summary="Confirm Payment for a Booking",
+    description="Confirms a booking's payment. Users can confirm their own bookings, while admins can confirm any booking."
 )
 async def confirm_payment(
     booking_id: str,
-    current_user: User = Depends(get_admin_user)
+    current_user: User = Depends(get_current_user),
+    transaction_id: str = Body(..., embed=True, description="The payment transaction ID"),
+    payment_method: str = Body("UPI", embed=True, description="The payment method used (e.g., UPI, Card)")
 ):
     """
     Confirm payment for a booking.
-    
+
     - **booking_id**: UUID of the booking
-    
-    **Admin Only**: Requires admin privileges.
-    
-    **Actions:**
-    - Updates payment_status to 'paid'
-    - Updates booking_status to 'confirmed'
-    - Sets payment_confirmed_at timestamp
+    - **transaction_id**: Payment transaction ID
+    - **payment_method**: Payment method used
+
+    **Access Control:**
+    - Users can confirm payment for their own bookings.
+    - Admins can confirm payment for any booking.
+
+    Updates booking and payment status upon successful confirmation.
     """
     try:
-        # Get existing booking
-        existing_booking = await supabase_service.get_booking_by_id(booking_id)
-        if not existing_booking:
+        booking = await supabase_service.get_booking_by_id(booking_id)
+
+        if not booking:
             raise NotFoundException("Booking", booking_id)
-        
+
+        # 🔒 Check access permissions
+        if not current_user.is_admin and booking.user_id != current_user.id:
+            raise AuthorizationException("Access denied: You can only confirm payment for your own bookings.")
+
+        # Check if payment already confirmed
+        if booking.payment_status == PaymentStatus.PAID:
+            raise BusinessLogicException("Payment has already been confirmed for this booking.", "payment_confirmed")
+
         # Update booking with payment confirmation
         update_data = {
             "payment_status": PaymentStatus.PAID.value,
             "booking_status": BookingStatus.CONFIRMED.value,
+            "transaction_id": transaction_id,
+            "payment_method": payment_method,
             "payment_confirmed_at": datetime.now(timezone.utc).isoformat()
         }
-        
+
         updated_booking = await supabase_service.update_booking(booking_id, update_data)
-        
-        return {"message": "Payment confirmed successfully", "booking": updated_booking}
-        
-    except NotFoundException:
-        raise
-    except Exception as e:
-        logger.error(f"Error confirming payment for booking {booking_id}: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to confirm payment: {str(e)}"
-        )
 
-
-@router.get(
-    "/{booking_id}/payment-info",
-    tags=["Admin"],
-    summary="Get Payment Info",
-    description="Get payment information for a booking (Admin only)"
-)
-async def get_payment_info(
-    booking_id: str,
-    current_user: User = Depends(get_admin_user)
-):
-    """
-    Get payment information for a booking.
-    
-    - **booking_id**: UUID of the booking
-    
-    **Admin Only**: Requires admin privileges.
-    """
-    try:
-        booking = await supabase_service.get_booking_by_id(booking_id)
-        if not booking:
-            raise NotFoundException("Booking", booking_id)
-        
-        # Get user info
-        user = await supabase_service.get_user_by_id(booking.user_id)
-        
         return {
-            "booking_id": booking.id,
-            "amount": booking.total_amount,
-            "currency": "INR",
-            "payment_method": None,  # Not yet implemented in database
-            "transaction_id": None,  # Not yet implemented in database
-            "payment_date": booking.payment_confirmed_at,  # Use confirmation date as payment date
-            "payment_confirmed_at": booking.payment_confirmed_at,
-            "payer_name": user.full_name if user else "Unknown",
-            "payer_email": user.email if user else "Unknown",
-            "payment_proof_url": None,  # Not yet implemented in database
-            "notes": booking.special_requests
+            "message": "Payment confirmed successfully",
+            "booking": updated_booking
         }
-        
-    except NotFoundException:
+
+    except (ValidationException, BusinessLogicException, AuthorizationException) as e:
+        # Let the global exception handler manage these specific errors
+        raise e
+    except HTTPException:
+        # Re-raise known HTTP exceptions
         raise
     except Exception as e:
-        logger.error(f"Error fetching payment info for booking {booking_id}: {str(e)}")
+        logger.error(f"Failed to confirm payment for booking {booking_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch payment info: {str(e)}"
+            detail=f"An unexpected error occurred while confirming the payment."
         )
-
+    
 
 class RejectPaymentRequest(BaseModel):
     """Request model for rejecting payment"""
@@ -1044,88 +820,6 @@ async def get_payment_info(
             detail=f"Failed to fetch payment info: {str(e)}"
         )
 
-
-@router.post(
-    "/{booking_id}/confirm-payment",
-    tags=["Bookings"],
-    summary="Confirm Payment",
-    description="Confirm payment for a booking"
-)
-async def confirm_payment(
-    booking_id: str,
-    payment_data: dict,
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Confirm payment for a booking.
-    
-    - **booking_id**: UUID of the booking
-    - **transaction_id**: Payment transaction ID
-    - **payment_method**: Payment method used (UPI, Card, etc.)
-    
-    **Access Control:**
-    - Users can confirm payment for their own bookings
-    - Admins can confirm payment for any booking
-    
-    Updates booking and payment status upon successful confirmation.
-    """
-    try:
-        booking = await supabase_service.get_booking_by_id(booking_id)
-        
-        if not booking:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Booking not found"
-            )
-        
-        # Check access permissions
-        if not current_user.is_admin and booking.user_id != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied"
-            )
-        
-        # Validate payment data
-        transaction_id = payment_data.get("transaction_id")
-        payment_method = payment_data.get("payment_method", "UPI")
-        
-        if not transaction_id:
-            raise ValidationException("Transaction ID is required")
-        
-        # Check if payment already confirmed
-        if booking.payment_status == PaymentStatus.PAID:
-            raise BusinessLogicException("Payment already confirmed", "payment_confirmed")
-        
-        # Update booking with payment confirmation
-        update_data = {
-            "payment_status": PaymentStatus.PAID.value,
-            "booking_status": BookingStatus.CONFIRMED.value,
-            "transaction_id": transaction_id,
-            "payment_method": payment_method,
-            "payment_confirmed_at": datetime.now(timezone.utc).isoformat()
-        }
-        
-        updated_booking = await supabase_service.update_booking(booking_id, update_data)
-        
-        return {
-            "message": "Payment confirmed successfully",
-            "booking": updated_booking,
-            "payment_status": "confirmed",
-            "transaction_id": transaction_id
-        }
-        
-    except (ValidationException, BusinessLogicException) as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=str(e)
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to confirm payment: {str(e)}"
-        )
 
 
 @router.get(

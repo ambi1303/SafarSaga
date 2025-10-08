@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useState } from "react";
 import { DestinationsService, Destination } from "@/lib/destinations-service";
 
@@ -21,6 +23,8 @@ export default function AdminDestinationsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [imageValid, setImageValid] = useState<boolean | null>(null);
 
   // Fetch all destinations from DB
   const fetchDestinations = async () => {
@@ -112,6 +116,11 @@ export default function AdminDestinationsPage() {
         <input name="state" value={form.state || ""} onChange={handleChange} placeholder="State" className="border p-2 rounded" />
         <input name="country" value={form.country || ""} onChange={handleChange} placeholder="Country" className="border p-2 rounded" />
         <input name="featured_image_url" value={form.featured_image_url || ""} onChange={handleChange} placeholder="Featured Image URL" className="border p-2 rounded" />
+        {form.featured_image_url && (
+          <div className="col-span-1 md:col-span-2">
+            <img src={form.featured_image_url} alt="Preview" className="mt-1 w-48 h-28 object-cover rounded border" />
+          </div>
+        )}
         <input name="gallery_images" value={(form.gallery_images || []).join(", ")}
           onChange={e => handleArrayChange("gallery_images", e.target.value)}
           placeholder="Gallery Image URLs (comma separated)" className="border p-2 rounded" />

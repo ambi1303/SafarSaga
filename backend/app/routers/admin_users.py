@@ -48,55 +48,38 @@ async def get_users(
     - Paginated list of users with statistics
     """
     try:
-        # Build query
-        query = supabase_service.client.from_("users").select(
-            """
-            id,
-            email,
-            full_name,
-            phone,
-            is_admin,
-            created_at,
-            updated_at
-            """,
-            count="exact"
-        )
+        # Get the initialized client
+        client = supabase_service._get_client()
         
-        # Apply search filter if provided
-        if search:
-            query = query.or_(
-                f"full_name.ilike.%{search}%,email.ilike.%{search}%,id.ilike.%{search}%"
-            )
+        # Use RPC to get users with stats in a single efficient query (solves N+1 problem)
+        response = client.rpc(
+            'get_users_with_stats',
+            {
+                'search_term': search,
+                'page_limit': limit,
+                'page_offset': offset
+            }
+        ).execute()
         
-        # Apply pagination
-        query = query.range(offset, offset + limit - 1).order("created_at", desc=True)
+        # Get total count for pagination
+        count_response = client.rpc(
+            'get_users_count',
+            {'search_term': search}
+        ).execute()
         
-        # Execute query
-        response = query.execute()
+        total_count = count_response.data if count_response.data else 0
         
-        # Get user statistics (bookings and spending)
-        users_with_stats = []
-        for user in response.data:
-            # Get booking stats for each user
-            booking_stats = supabase_service.client.from_("bookings").select(
-                "total_amount",
-                count="exact"
-            ).eq("user_id", user["id"]).execute()
-            
-            total_bookings = booking_stats.count or 0
-            total_spent = sum(b.get("total_amount", 0) for b in booking_stats.data) if booking_stats.data else 0
-            
-            users_with_stats.append({
-                **user,
-                "total_bookings": total_bookings,
-                "total_spent": total_spent
-            })
+        # Calculate pagination metadata
+        has_next = offset + limit < total_count
+        has_prev = offset > 0
         
         return {
-            "items": users_with_stats,
-            "total": response.count or 0,
+            "items": response.data or [],
+            "total": total_count,
             "limit": limit,
-            "offset": offset
+            "offset": offset,
+            "has_next": has_next,
+            "has_prev": has_prev
         }
         
     except Exception as e:
@@ -126,8 +109,11 @@ async def get_user_details(
     - User details with statistics
     """
     try:
+        # Get the initialized client
+        client = supabase_service._get_client()
+        
         # Get user details
-        response = supabase_service.client.from_("users").select("*").eq("id", user_id).execute()
+        response = client.from_("users").select("*").eq("id", user_id).execute()
         
         if not response.data:
             raise NotFoundException(f"User with ID {user_id} not found")
@@ -135,7 +121,7 @@ async def get_user_details(
         user_data = response.data[0]
         
         # Get booking statistics
-        booking_stats = supabase_service.client.from_("bookings").select(
+        booking_stats = client.from_("tickets").select(
             "total_amount, booking_status",
             count="exact"
         ).eq("user_id", user_id).execute()
@@ -153,6 +139,57 @@ async def get_user_details(
         raise
     except Exception as e:
         raise DatabaseException(f"Failed to fetch user details: {str(e)}")
+
+
+@router.post(
+    "/{user_id}/activate",
+    tags=["Admin"],
+    summary="Activate User",
+    description="Activate a user account (admin only)"
+)
+async def activate_user(
+    user_id: str,
+    current_user: User = Depends(get_admin_user)
+):
+    """
+    Activate a user account. Activated users can log in.
+    
+    **Admin only endpoint**
+    
+    Parameters:
+    - user_id: The ID of the user to activate
+    
+    Returns:
+    - Success message
+    """
+    try:
+        # Get the initialized client
+        client = supabase_service._get_client()
+        
+        # Check if user exists
+        user_response = client.from_("users").select("*").eq("id", user_id).execute()
+        
+        if not user_response.data:
+            raise NotFoundException(f"User with ID {user_id} not found")
+        
+        user = user_response.data[0]
+        
+        # Prevent activating deleted users
+        if user.get("deleted_at"):
+            raise AuthorizationException("Cannot activate a deleted user. Please restore the user first.")
+        
+        # Activate the user by setting is_active to True
+        client.from_("users").update({"is_active": True}).eq("id", user_id).execute()
+        
+        return {
+            "message": "User activated successfully",
+            "user_id": user_id
+        }
+        
+    except (NotFoundException, AuthorizationException):
+        raise
+    except Exception as e:
+        raise DatabaseException(f"Failed to activate user: {str(e)}")
 
 
 @router.post(
@@ -177,8 +214,11 @@ async def deactivate_user(
     - Success message
     """
     try:
+        # Get the initialized client
+        client = supabase_service._get_client()
+        
         # Check if user exists
-        user_response = supabase_service.client.from_("users").select("*").eq("id", user_id).execute()
+        user_response = client.from_("users").select("*").eq("id", user_id).execute()
         
         if not user_response.data:
             raise NotFoundException(f"User with ID {user_id} not found")
@@ -193,10 +233,8 @@ async def deactivate_user(
         if user_id == current_user.id:
             raise AuthorizationException("Cannot deactivate your own account")
         
-        # Update user status (you may need to add an 'active' column to your users table)
-        # For now, we'll just return success
-        # In a real implementation, you'd update a status field:
-        # supabase_service.client.from_("users").update({"active": False}).eq("id", user_id).execute()
+        # Deactivate the user by setting is_active to False
+        client.from_("users").update({"is_active": False}).eq("id", user_id).execute()
         
         return {
             "message": "User deactivated successfully",
@@ -232,8 +270,11 @@ async def delete_user(
     - Success message
     """
     try:
+        # Get the initialized client
+        client = supabase_service._get_client()
+        
         # Check if user exists
-        user_response = supabase_service.client.from_("users").select("*").eq("id", user_id).execute()
+        user_response = client.from_("users").select("*").eq("id", user_id).execute()
         
         if not user_response.data:
             raise NotFoundException(f"User with ID {user_id} not found")
@@ -249,7 +290,7 @@ async def delete_user(
             raise AuthorizationException("Cannot delete your own account")
         
         # Check if user has active bookings
-        active_bookings = supabase_service.client.from_("bookings").select(
+        active_bookings = client.from_("tickets").select(
             "id", count="exact"
         ).eq("user_id", user_id).in_("booking_status", ["pending", "confirmed"]).execute()
         
@@ -259,8 +300,11 @@ async def delete_user(
                 "Please cancel or complete all bookings first."
             )
         
-        # Delete user (this will cascade delete related records if foreign keys are set up properly)
-        supabase_service.client.from_("users").delete().eq("id", user_id).execute()
+        # Perform soft delete by setting deleted_at timestamp and deactivating the user
+        client.from_("users").update({
+            "deleted_at": datetime.utcnow().isoformat(),
+            "is_active": False
+        }).eq("id", user_id).execute()
         
         return {
             "message": "User deleted successfully",

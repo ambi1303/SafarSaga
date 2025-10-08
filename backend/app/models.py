@@ -20,9 +20,9 @@ class PaymentStatus(str, Enum):
     REFUNDED = "refunded"
 
 class DifficultyLevel(str, Enum):
-    EASY = "easy"
-    MODERATE = "moderate"
-    CHALLENGING = "challenging"
+    EASY = "Easy"
+    MODERATE = "Moderate"
+    CHALLENGING = "Challenging"
 
 # Base Models
 class ContactInfo(BaseModel):
@@ -153,8 +153,11 @@ class User(BaseModel):
     id: str
     email: str
     full_name: Optional[str] = None
+    phone: Optional[str] = None
     is_admin: bool = False
+    is_active: Optional[bool] = True
     created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
 class Destination(BaseModel):
     """Destination model"""
@@ -163,18 +166,15 @@ class Destination(BaseModel):
     location: Optional[str] = None
     state: Optional[str] = None
     description: Optional[str] = None
+    featured_image_url: Optional[str] = None
+    gallery_images: Optional[List[str]] = None
     average_cost_per_day: Optional[Decimal] = None
     difficulty_level: Optional[DifficultyLevel] = None
+    best_time_to_visit: Optional[str] = None
+    popular_activities: Optional[List[str]] = None
     is_active: bool = True
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
-    
-    @validator("difficulty_level", pre=True)
-    def normalize_difficulty(cls, v):
-        """Normalize difficulty level to lowercase for case-insensitive matching"""
-        if isinstance(v, str):
-            return v.lower()
-        return v
     
     class Config:
         extra = "ignore"  # Ignore extra fields from database
@@ -182,19 +182,31 @@ class Destination(BaseModel):
 class DestinationCreate(BaseModel):
     """Model for creating destinations"""
     name: str = Field(..., min_length=1, max_length=200)
-    location: str = Field(..., min_length=1, max_length=200)
+    location: Optional[str] = Field(None, min_length=1, max_length=200)
+    state: Optional[str] = Field(None, min_length=1, max_length=100)
+    country: Optional[str] = Field(None, max_length=100)
     description: Optional[str] = Field(None, max_length=2000)
+    featured_image_url: Optional[str] = Field(None, max_length=500)
+    gallery_images: Optional[List[str]] = None
     average_cost_per_day: Optional[Decimal] = Field(None, ge=0)
     difficulty_level: Optional[DifficultyLevel] = None
+    best_time_to_visit: Optional[str] = Field(None, max_length=200)
+    popular_activities: Optional[List[str]] = None
     is_active: bool = True
 
 class DestinationUpdate(BaseModel):
     """Model for updating destinations"""
     name: Optional[str] = Field(None, min_length=1, max_length=200)
     location: Optional[str] = Field(None, min_length=1, max_length=200)
+    state: Optional[str] = Field(None, min_length=1, max_length=100)
+    country: Optional[str] = Field(None, max_length=100)
     description: Optional[str] = Field(None, max_length=2000)
+    featured_image_url: Optional[str] = Field(None, max_length=500)
+    gallery_images: Optional[List[str]] = None
     average_cost_per_day: Optional[Decimal] = Field(None, ge=0)
     difficulty_level: Optional[DifficultyLevel] = None
+    best_time_to_visit: Optional[str] = Field(None, max_length=200)
+    popular_activities: Optional[List[str]] = None
     is_active: Optional[bool] = None
 
 class Event(BaseModel):

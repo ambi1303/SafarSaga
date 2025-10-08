@@ -28,6 +28,7 @@ const navItems: NavItem[] = [
   { label: 'Bookings', href: '/admin/bookings', icon: Calendar },
   { label: 'Payments', href: '/admin/payments', icon: CreditCard },
   { label: 'Users', href: '/admin/users', icon: Users },
+  { label: 'Destinations', href: '/admin/destinations', icon: MapPin },
   { label: 'Trips', href: '/admin/trips', icon: MapPin },
   { label: 'Gallery', href: '/admin/gallery', icon: Camera },
   { label: 'Analytics', href: '/admin/analytics', icon: BarChart3 },

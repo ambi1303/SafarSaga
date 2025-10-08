@@ -26,15 +26,23 @@ export class UsersAdminService {
     offset: number = 0
   ): Promise<{ items: UserListItem[]; total: number }> {
     try {
-      // Note: This endpoint might need to be created in the backend
       const params: any = { limit, offset }
       if (search) params.search = search
 
       const response = await adminApi.get('/api/users/', { params })
-      return {
-        items: response.data.items || response.data || [],
-        total: response.data.total || response.data.length || 0
-      }
+      
+      // Robust response handling with type safety
+      const items = Array.isArray(response.data.items) 
+        ? response.data.items 
+        : Array.isArray(response.data) 
+        ? response.data 
+        : []
+      
+      const total = typeof response.data.total === 'number' 
+        ? response.data.total 
+        : items.length
+      
+      return { items, total }
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -72,7 +80,7 @@ export class UsersAdminService {
    */
   static async deactivateUser(userId: string): Promise<void> {
     try {
-      await adminApi.put(`/api/users/${userId}`, { account_status: 'inactive' })
+      await adminApi.post(`/api/users/${userId}/deactivate`)
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -83,7 +91,7 @@ export class UsersAdminService {
    */
   static async activateUser(userId: string): Promise<void> {
     try {
-      await adminApi.put(`/api/users/${userId}`, { account_status: 'active' })
+      await adminApi.post(`/api/users/${userId}/activate`)
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }

@@ -3,6 +3,8 @@
  * Handles destination data and operations
  */
 
+import adminApi, { getErrorMessage } from './admin-api'
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
 export interface Destination {
@@ -46,56 +48,32 @@ export class DestinationsService {
    * Get all destinations with optional filtering
    */
   static async getDestinations(filters?: DestinationFilters): Promise<PaginatedDestinations> {
-    console.log('🔍 Loading destinations from API...')
-    
     try {
-      // First try to get from destinations API
-      const params = new URLSearchParams()
+      const params: any = {}
       
       if (filters) {
-        if (filters.state) params.append('state', filters.state)
-        if (filters.difficulty) params.append('difficulty', filters.difficulty)
-        if (filters.min_cost) params.append('min_cost', filters.min_cost.toString())
-        if (filters.max_cost) params.append('max_cost', filters.max_cost.toString())
-        if (filters.is_active !== undefined) params.append('is_active', filters.is_active.toString())
-        if (filters.limit) params.append('limit', filters.limit.toString())
-        if (filters.offset) params.append('offset', filters.offset.toString())
+        if (filters.state) params.state = filters.state
+        if (filters.difficulty) params.difficulty = filters.difficulty
+        if (filters.min_cost) params.min_cost = filters.min_cost
+        if (filters.max_cost) params.max_cost = filters.max_cost
+        if (filters.is_active !== undefined) params.is_active = filters.is_active
+        if (filters.limit) params.limit = filters.limit
+        if (filters.offset) params.offset = filters.offset
       }
       
-      // Try destinations API first
-      console.log('🌐 Using destinations API...')
+      const response = await adminApi.get('/api/destinations/', { params })
       
-      let url = `${API_BASE_URL}/api/destinations${params.toString() ? '?' + params.toString() : ''}`
-      console.log('🌐 Trying destinations API:', url)
-        
-        let response = await fetch(url, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          mode: 'cors'
-        })
-        
-        if (response.ok) {
-          const destinationsData = await response.json()
-          console.log('✅ Destinations API success:', destinationsData)
-          
-          return {
-            items: destinationsData.items || [],
-            total: destinationsData.total || 0,
-            limit: destinationsData.limit || 20,
-            offset: destinationsData.offset || 0,
-            has_next: destinationsData.has_next || false,
-            has_prev: destinationsData.has_prev || false
-          }
-        } else {
-          console.error('❌ Destinations API failed:', response.status, response.statusText)
-          throw new Error(`Destinations API failed: ${response.status}`)
-        }
+      return {
+        items: response.data.items || [],
+        total: response.data.total || 0,
+        limit: response.data.limit || 20,
+        offset: response.data.offset || 0,
+        has_next: response.data.has_next || false,
+        has_prev: response.data.has_prev || false
+      }
     } catch (error) {
-      console.error('❌ API Error:', error)
-      console.log('🔄 Falling back to mock destinations...')
-      return this.getMockDestinations(filters)
+      console.error('Failed to fetch destinations:', error)
+      throw new Error(getErrorMessage(error))
     }
   }
 
@@ -104,18 +82,52 @@ export class DestinationsService {
    */
   static async getDestination(destinationId: string): Promise<Destination | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/destinations/${destinationId}`)
-      
-      if (response.ok) {
-        const data = await response.json()
-        return data
-      } else {
-        console.error('Failed to fetch destination:', response.statusText)
-        return this.getMockDestination(destinationId)
-      }
+      const response = await adminApi.get(`/api/destinations/${destinationId}`)
+      return response.data
     } catch (error) {
-      console.error('Error fetching destination:', error)
-      return this.getMockDestination(destinationId)
+      console.error('Failed to fetch destination:', error)
+      throw new Error(getErrorMessage(error))
+    }
+  }
+
+  /**
+   * Create a new destination (Admin only)
+   */
+  static async createDestination(destinationData: Partial<Destination>): Promise<Destination> {
+    try {
+      const response = await adminApi.post('/api/destinations/', destinationData)
+      return response.data
+    } catch (error) {
+      console.error('Failed to create destination:', error)
+      throw new Error(getErrorMessage(error))
+    }
+  }
+
+  /**
+   * Update an existing destination (Admin only)
+   */
+  static async updateDestination(id: string, destinationData: Partial<Destination>): Promise<Destination> {
+    try {
+      const dataToSend = { ...destinationData }
+      delete dataToSend.id // Don't send ID in body
+      
+      const response = await adminApi.put(`/api/destinations/${id}`, dataToSend)
+      return response.data
+    } catch (error) {
+      console.error('Failed to update destination:', error)
+      throw new Error(getErrorMessage(error))
+    }
+  }
+
+  /**
+   * Delete a destination (Admin only)
+   */
+  static async deleteDestination(id: string): Promise<void> {
+    try {
+      await adminApi.delete(`/api/destinations/${id}`)
+    } catch (error) {
+      console.error('Failed to delete destination:', error)
+      throw new Error(getErrorMessage(error))
     }
   }
 
@@ -124,18 +136,13 @@ export class DestinationsService {
    */
   static async searchDestinations(query: string, limit: number = 10): Promise<Destination[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/destinations/search/${encodeURIComponent(query)}?limit=${limit}`)
-      
-      if (response.ok) {
-        const data = await response.json()
-        return data
-      } else {
-        console.error('Failed to search destinations:', response.statusText)
-        return this.getMockSearchResults(query, limit)
-      }
+      const response = await adminApi.get('/api/destinations/search', {
+        params: { query, limit }
+      })
+      return response.data
     } catch (error) {
-      console.error('Error searching destinations:', error)
-      return this.getMockSearchResults(query, limit)
+      console.error('Failed to search destinations:', error)
+      throw new Error(getErrorMessage(error))
     }
   }
 
@@ -144,18 +151,11 @@ export class DestinationsService {
    */
   static async getDestinationActivities(destinationId: string): Promise<any> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/destinations/${destinationId}/activities`)
-      
-      if (response.ok) {
-        const data = await response.json()
-        return data
-      } else {
-        console.error('Failed to fetch destination activities:', response.statusText)
-        return this.getMockActivities(destinationId)
-      }
+      const response = await adminApi.get(`/api/destinations/${destinationId}/activities`)
+      return response.data
     } catch (error) {
-      console.error('Error fetching destination activities:', error)
-      return this.getMockActivities(destinationId)
+      console.error('Failed to fetch destination activities:', error)
+      throw new Error(getErrorMessage(error))
     }
   }
 

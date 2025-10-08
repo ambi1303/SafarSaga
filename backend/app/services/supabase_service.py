@@ -8,7 +8,7 @@ from supabase import create_client, Client
 from datetime import datetime
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
-
+from decimal import Decimal
 from app.models import User, Event, Booking, GalleryImage, Destination
 from app.exceptions import (
     DatabaseException, 
@@ -668,8 +668,13 @@ class SupabaseService:
         try:
             def _get_bookings():
                 try:
-                    # Get bookings data first
-                    query = self._get_client().table("tickets").select("*")
+                    # Use foreign key embedding to get all data in a single query (fixes N+1 problem)
+                    query = self._get_client().table("tickets").select("""
+                        *,
+                        user:users(id, email, full_name),
+                        destination:destinations(*),
+                        event:events(*)
+                    """)
                     
                     # Apply filters
                     if filters:
@@ -688,69 +693,28 @@ class SupabaseService:
                         if filters.get("payment_status"):
                             query = query.eq("payment_status", filters["payment_status"])
                     
-                    # Add pagination and ordering with fallback for missing columns
-                    try:
-                        # Try booked_at first (preferred)
-                        query = query.order("booked_at", desc=True).range(offset, offset + limit - 1)
-                    except:
-                        try:
-                            # Fallback to created_at
-                            query = query.order("created_at", desc=True).range(offset, offset + limit - 1)
-                        except:
-                            try:
-                                # Fallback to updated_at
-                                query = query.order("updated_at", desc=True).range(offset, offset + limit - 1)
-                            except:
-                                # Final fallback to id
-                                query = query.order("id", desc=True).range(offset, offset + limit - 1)
+                    # Add pagination and ordering
+                    query = query.order("created_at", desc=True).range(offset, offset + limit - 1)
                     
                     response = query.execute()
                     bookings_data = response.data if response.data else []
                     
-                    # Manually join destination, event, and user data
+                    # Process the enriched data
                     enriched_bookings = []
                     for booking in bookings_data:
                         enriched_booking = booking.copy()
                         
-                        # Get user data if user_id exists
-                        if booking.get('user_id'):
-                            try:
-                                user_response = self._get_client().table("users").select("id, email, full_name").eq("id", booking['user_id']).execute()
-                                if user_response.data:
-                                    user_data = user_response.data[0]
-                                    enriched_booking['user_name'] = user_data.get('full_name')
-                                    enriched_booking['user_email'] = user_data.get('email')
-                            except Exception as user_error:
-                                print(f"Warning: Could not fetch user {booking.get('user_id')}: {str(user_error)}")
-                                enriched_booking['user_name'] = None
-                                enriched_booking['user_email'] = None
+                        # Extract user data from embedded response
+                        if booking.get('user'):
+                            enriched_booking['user_name'] = booking['user'].get('full_name')
+                            enriched_booking['user_email'] = booking['user'].get('email')
                         
-                        # Get destination data if destination_id exists
-                        if booking.get('destination_id'):
-                            try:
-                                dest_response = self._get_client().table("destinations").select("*").eq("id", booking['destination_id']).execute()
-                                if dest_response.data:
-                                    dest_data = dest_response.data[0]
-                                    enriched_booking['destination'] = dest_data
-                                    enriched_booking['destination_name'] = dest_data.get('name')
-                            except Exception as dest_error:
-                                print(f"Warning: Could not fetch destination {booking.get('destination_id')}: {str(dest_error)}")
-                                enriched_booking['destination'] = None
-                                enriched_booking['destination_name'] = None
-                        
-                        # Get event data if event_id exists
-                        if booking.get('event_id'):
-                            try:
-                                event_response = self._get_client().table("events").select("*").eq("id", booking['event_id']).execute()
-                                if event_response.data:
-                                    event_data = event_response.data[0]
-                                    enriched_booking['event'] = event_data
-                                    # If no destination_name, use event name
-                                    if not enriched_booking.get('destination_name'):
-                                        enriched_booking['destination_name'] = event_data.get('name')
-                            except Exception as event_error:
-                                print(f"Warning: Could not fetch event {booking.get('event_id')}: {str(event_error)}")
-                                enriched_booking['event'] = None
+                        # Extract destination name
+                        if booking.get('destination'):
+                            enriched_booking['destination_name'] = booking['destination'].get('name')
+                        elif booking.get('event'):
+                            # Fallback to event name if no destination
+                            enriched_booking['destination_name'] = booking['event'].get('name')
                         
                         enriched_bookings.append(enriched_booking)
                     
@@ -1138,18 +1102,18 @@ class SupabaseService:
             
         except Exception as e:
             raise handle_supabase_error(e, "delete gallery image")
-    
-    # Destination operations
+
     async def get_destinations(self, filters: dict = None, limit: int = 20, offset: int = 0) -> tuple[List[Destination], int]:
         """Get destinations with filtering and pagination"""
         try:
             def _get_destinations():
-                query = self._get_client().table("destinations").select("*")
+                # Single query with both data and count (more efficient)
+                query = self._get_client().table("destinations").select("*", count='exact')
                 
-                # Apply filters
+                # Apply filters once
                 if filters:
                     if filters.get("state"):
-                        query = query.ilike("state", f"%{filters['state']}%")
+                        query = query.eq("state", filters["state"])
                     
                     if filters.get("difficulty_level"):
                         query = query.eq("difficulty_level", filters["difficulty_level"])
@@ -1164,12 +1128,14 @@ class SupabaseService:
                         query = query.eq("is_active", filters["is_active"])
                 
                 # Add pagination and ordering
-                query = query.order("name").range(offset, offset + limit - 1)
+                query = query.order("created_at", desc=True).range(offset, offset + limit - 1)
                 
+                # Execute single query
                 response = query.execute()
-                return response.data if response.data else []
+                return response.data if response.data else [], response.count if hasattr(response, 'count') else 0
             
-            destinations_data = await self._run_sync(_get_destinations)
+            # Run the sync function
+            destinations_data, total = await self._run_sync(_get_destinations)
             
             # Convert to Destination objects with error handling
             destinations = []
@@ -1182,15 +1148,12 @@ class SupabaseService:
                     # Skip invalid destination data
                     continue
             
-            # Get total count (simplified)
-            total = len(destinations)
-            
             return destinations, total
             
         except Exception as e:
             print(f"Error in get_destinations: {str(e)}")
-            raise handle_supabase_error(e, "get destinations")
-    
+            raise DatabaseException(f"Failed to fetch destinations: {str(e)}")
+
     async def get_destination_by_id(self, destination_id: str) -> Optional[Destination]:
         """Get destination by ID"""
         try:
@@ -1210,29 +1173,69 @@ class SupabaseService:
             if any(phrase in error_str for phrase in ["no rows found", "not found", "pgrst116", "nonetype"]):
                 return None
             raise handle_supabase_error(e, "get destination by ID")
-    
+
     async def create_destination(self, destination_data: dict) -> Destination:
         """Create new destination"""
         try:
+            print(f"DEBUG - Attempting to create destination with data: {destination_data}")
+            
+            # Ensure required fields are present
+            required_fields = ['name']
+            for field in required_fields:
+                if field not in destination_data or not destination_data[field]:
+                    raise ValidationException(f"Missing required field: {field}")
+            
+            # Set default values if not provided
+            destination_data.setdefault('is_active', True)
+            destination_data.setdefault('country', 'India')
+            
+            # Convert Decimal to float for JSON serialization
+            if 'average_cost_per_day' in destination_data and isinstance(destination_data['average_cost_per_day'], Decimal):
+                destination_data['average_cost_per_day'] = float(destination_data['average_cost_per_day'])
+                print(f"DEBUG - Converted average_cost_per_day from Decimal to float: {destination_data['average_cost_per_day']}")
+            
             def _create_destination():
-                response = self._get_client().table("destinations").insert(destination_data).execute()
-                return response.data[0] if response.data else None
+                try:
+                    print(f"DEBUG - Executing insert with data: {destination_data}")
+                    response = self._get_client().table("destinations").insert(destination_data).execute()
+                    print(f"DEBUG - Insert response: {response}")
+                    
+                    # Check for Supabase error
+                    if hasattr(response, 'error') and response.error:
+                        print(f"SUPABASE ERROR: {response.error}")
+                        print(f"DATA SENT: {destination_data}")
+                        raise DatabaseException(f"Supabase error: {response.error}")
+                    
+                    return response.data[0] if response and hasattr(response, 'data') and response.data else None
+                except Exception as db_error:
+                    print(f"DEBUG - Database error in _create_destination: {str(db_error)}")
+                    print(f"DEBUG - Error type: {type(db_error).__name__}")
+                    if hasattr(db_error, '__dict__'):
+                        print(f"DEBUG - Error details: {db_error.__dict__}")
+                    raise db_error
             
             created_destination = await self._run_sync(_create_destination)
             
             if not created_destination:
-                raise DatabaseException("Failed to create destination")
+                raise DatabaseException("Failed to create destination: No data returned from database")
             
+            print(f"DEBUG - Successfully created destination: {created_destination}")
             return Destination(**created_destination)
             
         except Exception as e:
+            error_msg = f"Failed to create destination: {str(e)}"
+            print(f"ERROR - {error_msg}")
+            if hasattr(e, 'message') and 'duplicate key' in str(e.message).lower():
+                raise ConflictException(f"A destination with name '{destination_data.get('name')}' already exists")
             raise handle_supabase_error(e, "create destination")
-    
     async def update_destination(self, destination_id: str, update_data: dict) -> Destination:
         """Update destination"""
         try:
-            # Add updated_at timestamp
             update_data["updated_at"] = datetime.utcnow().isoformat()
+            
+            # Convert Decimal to float for JSON serialization
+            if 'average_cost_per_day' in update_data and isinstance(update_data['average_cost_per_day'], Decimal):
+                update_data['average_cost_per_day'] = float(update_data['average_cost_per_day'])
             
             def _update_destination():
                 response = self._get_client().table("destinations").update(update_data).eq("id", destination_id).execute()
@@ -1266,8 +1269,38 @@ class SupabaseService:
             
         except Exception as e:
             raise handle_supabase_error(e, "search destinations")
+    
+    async def destination_has_active_bookings(self, destination_id: str) -> bool:
+        """Check if a destination has any active bookings"""
+        try:
+            def _check_bookings():
+                response = self._get_client().table("tickets").select(
+                    "id", count='exact'
+                ).eq("destination_id", destination_id).in_("booking_status", ["pending", "confirmed"]).execute()
+                
+                return response.count > 0 if hasattr(response, 'count') else False
+            
+            has_bookings = await self._run_sync(_check_bookings)
+            return has_bookings
+            
+        except Exception as e:
+            print(f"Error checking for active bookings: {str(e)}")
+            # Fail safe: assume there are bookings to prevent accidental deletion
+            return True
+    
+    async def delete_destination(self, destination_id: str) -> bool:
+        """Permanently delete a destination from the database"""
+        try:
+            def _delete_destination():
+                response = self._get_client().table("destinations").delete().eq("id", destination_id).execute()
+                return len(response.data) > 0 if response.data else False
+            
+            deleted = await self._run_sync(_delete_destination)
+            return deleted
+            
+        except Exception as e:
+            raise handle_supabase_error(e, "delete destination")
 
-    # Health check
     async def health_check(self) -> dict:
         """Check database connectivity"""
         try:

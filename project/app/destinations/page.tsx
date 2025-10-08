@@ -27,60 +27,6 @@ import {
   ArrowRight
 } from 'lucide-react';
 
-const mockDestinations = [
-  {
-    id: 'dc5a0345-4c66-4f0d-8f65-392493bcf791', // Use actual event ID
-    name: 'Manali Adventure Trek',
-    location: 'Himachal Pradesh',
-    type: 'Adventure',
-    price: 15999,
-    originalPrice: 19999,
-    duration: '3N/4D',
-    rating: 4.8,
-    reviews: 124,
-    image:'https://liveb4youdie.com/wp-content/uploads/2021/10/lk3gk710you9ms5vu287emjabfd3_0001-5078545066_20210730_154224_0000.jpg',
-    description: 'Experience the breathtaking beauty of Manali with our guided adventure trek through scenic mountain trails.',
-    highlights: ['Trekking', 'Mountain Views', 'Local Culture'],
-    bestTime: 'Oct-Feb',
-    groupSize: '4-8 people',
-    featured: true
-  },
-  {
-    id: '080a50bf-f046-48d5-9ce2-b049bd65a13d', // Use actual event ID
-    name: 'Goa Beach Paradise',
-    location: 'Goa',
-    type: 'Beach',
-    price: 12999,
-    originalPrice: 16999,
-    duration: '3N/4D',
-    rating: 4.7,
-    reviews: 89,
-    image:'',
-    description: 'Relax and unwind on the pristine beaches of Goa with our all-inclusive beach holiday package.',
-    highlights: ['Beach Activities', 'Water Sports', 'Nightlife'],
-    bestTime: 'Nov-Mar',
-    groupSize: '2-6 people',
-    featured: true
-  },
-  {
-    id: '4d754d2f-97c7-4be4-972c-cf6909ffda93', // Use actual event ID
-    name: 'Kerala Backwaters Cruise',
-    location: 'Kerala',
-    type: 'Nature',
-    price: 18999,
-    originalPrice: 23999,
-    duration: '3N/4D',
-    rating: 4.9,
-    reviews: 156,
-    image: 'https://images.pexels.com/photos/1287145/pexels-photo-1287145.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
-    description: 'Discover the serene backwaters of Kerala with our luxury houseboat cruise experience.',
-    highlights: ['Houseboat Cruise', 'Backwaters', 'Local Villages'],
-    bestTime: 'Sep-Mar',
-    groupSize: '4-8 people',
-    featured: true
-  },
-];
-
 const categories = [
   { id: 'all', name: 'All Destinations', icon: Compass, count: 0 },
   { id: 'adventure', name: 'Adventure', icon: Mountain, count: 0 },
@@ -140,7 +86,7 @@ export default function DestinationsPage() {
           duration: '2N/3D', // Default duration
           rating: 4.8, // Mock rating
           reviews: 100, // Mock reviews
-          image: dest.featured_image_url || 'https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',
+          image: dest.featured_image_url || '/images/placeholder-destination.svg',
           description: dest.description || 'Amazing travel experience awaits you',
           highlights: dest.popular_activities?.slice(0, 3) || ['Great Experience', 'Professional Guide', 'Memorable Journey'],
           bestTime: dest.best_time_to_visit || 'Oct-Feb',

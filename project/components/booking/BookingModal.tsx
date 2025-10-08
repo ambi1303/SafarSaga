@@ -43,6 +43,8 @@ export function BookingModal({
   destination,
   onBookingComplete
 }: BookingModalProps) {
+  // Fallback image for destinations without an image
+  const DEFAULT_PLACEHOLDER = '/images/placeholder-destination.svg'
   const router = useRouter()
   const [step, setStep] = useState<'details' | 'payment' | 'confirmation'>('details')
   const [loading, setLoading] = useState(false)
@@ -191,7 +193,7 @@ export function BookingModal({
         <div className="bg-gray-50 rounded-lg p-4 mb-6">
           <div className="flex gap-4">
             <img
-              src={destination.image}
+              src={destination.image || DEFAULT_PLACEHOLDER}
               alt={destination.name}
               className="w-20 h-20 rounded-lg object-cover"
             />
