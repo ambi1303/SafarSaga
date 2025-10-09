@@ -14,6 +14,7 @@ export interface User {
   provider?: 'email' | 'google' | 'facebook' | 'github'
   is_admin: boolean
   is_verified: boolean
+  is_active?: boolean
   created_at: string
   updated_at: string
 }

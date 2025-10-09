@@ -4,102 +4,82 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Camera } from 'lucide-react';
-import DynamicGallery from './DynamicGallery';
 
-// Simple image interface that doesn't depend on Cloudinary
+// Static gallery image interface
 interface GalleryImage {
-  publicId: string;
+  id: string;
   url: string;
-  secureUrl: string;
-  width: number;
-  height: number;
-  format: string;
-  createdAt: string;
-  tags: string[];
   title: string;
   altText: string;
   description?: string;
+  destination: string;
+  tags: string[];
 }
 
-// Fallback static gallery items for when Cloudinary is not configured
-const fallbackGalleryItems = [
+// Static gallery items from actual gallery albums only
+const staticGalleryItems = [
   {
-    publicId: 'fallback/manali-kasol',
+    id: 'manali-kasol-1',
     url: '/images/gallery/manali-kasol.JPG',
-    secureUrl: '/images/gallery/manali-kasol.JPG',
-    width: 800,
-    height: 600,
-    format: 'jpg',
-    createdAt: new Date().toISOString(),
-    tags: ['manali', 'kasol', 'adventure'],
     title: 'Manali Kasol Adventures',
     altText: 'Beautiful mountain landscape from Manali Kasol adventure tour',
-    description: 'Stunning mountain views captured during our Manali Kasol adventure tour'
+    description: 'Stunning mountain views captured during our Manali Kasol adventure tour',
+    destination: 'Manali Kasol',
+    tags: ['manali', 'kasol', 'adventure', 'mountains']
   },
   {
-    publicId: 'fallback/chopta-1',
+    id: 'chopta-1',
     url: '/images/gallery/chopta-1.JPG',
-    secureUrl: '/images/gallery/chopta-1.JPG',
-    width: 800,
-    height: 600,
-    format: 'jpg',
-    createdAt: new Date().toISOString(),
-    tags: ['chopta', 'mountains', 'trekking'],
     title: 'Chopta Mountain Views',
     altText: 'Breathtaking mountain views from Chopta trekking expedition',
-    description: 'Breathtaking mountain views from our Chopta trekking expedition'
+    description: 'Breathtaking mountain views from our Chopta trekking expedition',
+    destination: 'Chopta',
+    tags: ['chopta', 'mountains', 'trekking', 'himalaya']
   },
   {
-    publicId: 'fallback/jibhi',
+    id: 'jibhi-1',
     url: '/images/gallery/jibli.JPG',
-    secureUrl: '/images/gallery/jibli.JPG',
-    width: 800,
-    height: 600,
-    format: 'jpg',
-    createdAt: new Date().toISOString(),
-    tags: ['jibhi', 'forest', 'nature'],
     title: 'Jibhi Forest Trails',
     altText: 'Serene forest trails in Jibhi nature walk',
-    description: 'Serene forest trails discovered during our Jibhi nature walk'
+    description: 'Serene forest trails discovered during our Jibhi nature walk',
+    destination: 'Jibhi',
+    tags: ['jibhi', 'forest', 'nature', 'himachal']
   },
   {
-    publicId: 'fallback/chakrata',
+    id: 'chakrata-1',
     url: '/images/gallery/chakrata.JPG',
-    secureUrl: '/images/gallery/chakrata.JPG',
-    width: 800,
-    height: 600,
-    format: 'jpg',
-    createdAt: new Date().toISOString(),
-    tags: ['chakrata', 'hills', 'scenic'],
     title: 'Chakrata Hill Station',
     altText: 'Scenic beauty of Chakrata hill station',
-    description: 'Scenic beauty of Chakrata hill station during our weekend getaway'
+    description: 'Scenic beauty of Chakrata hill station during our weekend getaway',
+    destination: 'Chakrata',
+    tags: ['chakrata', 'hills', 'scenic', 'uttarakhand']
   },
   {
-    publicId: 'fallback/manali',
+    id: 'manali-2',
     url: '/images/gallery/manali.JPG',
-    secureUrl: '/images/gallery/manali.JPG',
-    width: 800,
-    height: 600,
-    format: 'jpg',
-    createdAt: new Date().toISOString(),
-    tags: ['manali', 'snow', 'adventure'],
     title: 'Manali Snow Adventures',
     altText: 'Snow-covered landscapes in Manali adventure tour',
-    description: 'Snow-covered landscapes from our thrilling Manali adventure tour'
+    description: 'Snow-covered landscapes from our thrilling Manali adventure tour',
+    destination: 'Manali',
+    tags: ['manali', 'snow', 'adventure', 'winter']
   },
   {
-    publicId: 'fallback/chopta2',
+    id: 'chopta-2',
     url: '/images/gallery/chopta2.JPG',
-    secureUrl: '/images/gallery/chopta2.JPG',
-    width: 800,
-    height: 600,
-    format: 'jpg',
-    createdAt: new Date().toISOString(),
-    tags: ['chopta', 'meadows', 'nature'],
     title: 'Chopta Meadows',
     altText: 'Lush green meadows of Chopta valley',
-    description: 'Lush green meadows of Chopta valley in full bloom'
+    description: 'Lush green meadows of Chopta valley in full bloom',
+    destination: 'Chopta',
+    tags: ['chopta', 'meadows', 'nature', 'green']
+  },
+  {
+    id: 'chopta-3',
+    url: '/images/gallery/chopta3.JPG',
+    title: 'Chopta Valley Views',
+    altText: 'Panoramic valley views from Chopta',
+    description: 'Spectacular panoramic views of the Chopta valley and surrounding peaks',
+    destination: 'Chopta',
+    tags: ['chopta', 'valley', 'panoramic', 'peaks']
   }
 ] as GalleryImage[];
 
@@ -116,16 +96,26 @@ const Gallery: React.FC<GalleryProps> = ({
   enableSearch = false,
   enableFilters = false
 }) => {
-  const [useCloudinary, setUseCloudinary] = useState(true);
-  const [initialImages, setInitialImages] = useState<GalleryImage[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [displayImages, setDisplayImages] = useState<GalleryImage[]>([]);
 
-  // Check if Cloudinary is configured
+  // Rotating gallery effect
   useEffect(() => {
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    if (!cloudName || cloudName === 'your_cloud_name_here') {
-      setUseCloudinary(false);
-      setInitialImages(fallbackGalleryItems.slice(0, itemsPerPage));
-    }
+    setDisplayImages(staticGalleryItems.slice(0, itemsPerPage));
+    
+    const interval = setInterval(() => {
+      setCurrentImageIndex(prev => {
+        const nextIndex = (prev + 1) % staticGalleryItems.length;
+        const newImages = [];
+        for (let i = 0; i < itemsPerPage; i++) {
+          newImages.push(staticGalleryItems[(nextIndex + i) % staticGalleryItems.length]);
+        }
+        setDisplayImages(newImages);
+        return nextIndex;
+      });
+    }, 4000); // Change images every 4 seconds
+
+    return () => clearInterval(interval);
   }, [itemsPerPage]);
 
   return (
@@ -147,54 +137,67 @@ const Gallery: React.FC<GalleryProps> = ({
           </div>
         )}
 
-        {/* Dynamic Gallery */}
-        {useCloudinary ? (
-          <DynamicGallery
-            itemsPerPage={itemsPerPage}
-            enableSearch={enableSearch}
-            enableFilters={enableFilters}
-            enableHoverEffects={true}
-            enableLightbox={true}
-            gridColumns={{
-              mobile: 1,
-              tablet: 2,
-              desktop: 3
-            }}
-          />
-        ) : (
-          <>
-            {/* Fallback Static Gallery */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {initialImages.map((item, index) => (
-                <div key={item.publicId} className="overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow">
-                  <img
-                    src={item.url}
-                    alt={item.altText}
-                    className="w-full h-64 object-cover"
-                    loading={index < 3 ? 'eager' : 'lazy'}
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = "https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop";
-                    }}
-                  />
-                  <div className="p-4 bg-white">
-                    <h3 className="font-semibold text-gray-900">{item.title}</h3>
-                    {item.description && (
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">{item.description}</p>
-                    )}
+        {/* Static Gallery with Rotating Effects */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {displayImages.map((item, index) => (
+            <div 
+              key={`${item.id}-${currentImageIndex}`} 
+              className="group overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-all duration-500 transform hover:-translate-y-2"
+              style={{
+                animationDelay: `${index * 200}ms`
+              }}
+            >
+              <div className="relative overflow-hidden">
+                <img
+                  src={item.url}
+                  alt={item.altText}
+                  className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-110"
+                  loading={index < 3 ? 'eager' : 'lazy'}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = "https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=600&h=400&fit=crop";
+                  }}
+                />
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                
+                {/* Destination badge */}
+                <div className="absolute top-3 left-3 bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                  {item.destination}
+                </div>
+                
+                {/* Tags on hover */}
+                <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="flex flex-wrap gap-1">
+                    {item.tags.slice(0, 3).map(tag => (
+                      <span key={tag} className="bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded text-xs">
+                        #{tag}
+                      </span>
+                    ))}
                   </div>
                 </div>
-              ))}
+              </div>
+              
+              <div className="p-4 bg-white">
+                <h3 className="font-semibold text-gray-900 group-hover:text-orange-600 transition-colors">
+                  {item.title}
+                </h3>
+                {item.description && (
+                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                    {item.description}
+                  </p>
+                )}
+              </div>
             </div>
+          ))}
+        </div>
 
-            {/* Configuration Notice */}
-            <div className="text-center mt-8 p-4 bg-orange-50 rounded-lg">
-              <p className="text-orange-700 text-sm">
-                <strong>Note:</strong> Configure Cloudinary credentials in your .env.local file to enable dynamic gallery features.
-              </p>
-            </div>
-          </>
-        )}
+        {/* Gallery Info */}
+        <div className="text-center mt-8 p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg">
+          <p className="text-orange-800 text-sm">
+            <strong>✨ Live Gallery:</strong> Images rotate automatically every 4 seconds from our actual travel albums!
+          </p>
+        </div>
 
         {/* View More Button */}
         <div className="text-center mt-12">

@@ -377,53 +377,84 @@ class SupabaseService:
         try:
             def _get_bookings():
                 try:
-                    # Use foreign key embedding to get all data in a single query (fixes N+1 problem)
-                    query = self._get_client().table("tickets").select("""
-                        *,
-                        user:users(id, email, full_name),
-                        destination:destinations(*),
-                        event:events(*)
-                    """)
+                    # First, let's try a simple query without joins to see if basic data works
+                    print("DEBUG - Testing basic query without joins...")
+                    basic_query = self._get_client().table("tickets").select("*")
+                    basic_response = basic_query.execute()
+                    print(f"DEBUG - Basic query returned {len(basic_response.data)} records")
+                    
+                    # Get tickets data first
+                    query = self._get_client().table("tickets").select("*")
                     
                     # Apply filters
                     if filters:
                         if filters.get("user_id"):
                             query = query.eq("user_id", filters["user_id"])
-                        
                         if filters.get("event_id"):
                             query = query.eq("event_id", filters["event_id"])
-                        
                         if filters.get("destination_id"):
                             query = query.eq("destination_id", filters["destination_id"])
-                        
                         if filters.get("booking_status"):
                             query = query.eq("booking_status", filters["booking_status"])
-                        
                         if filters.get("payment_status"):
                             query = query.eq("payment_status", filters["payment_status"])
                     
                     # Add pagination and ordering
-                    query = query.order("created_at", desc=True).range(offset, offset + limit - 1)
+                    query = query.order("booked_at", desc=True).range(offset, offset + limit - 1)
                     
                     response = query.execute()
                     bookings_data = response.data if response.data else []
                     
-                    # Process the enriched data
+                    # Manually fetch user and destination data for each booking
                     enriched_bookings = []
                     for booking in bookings_data:
                         enriched_booking = booking.copy()
                         
-                        # Extract user data from embedded response
-                        if booking.get('user'):
-                            enriched_booking['user_name'] = booking['user'].get('full_name')
-                            enriched_booking['user_email'] = booking['user'].get('email')
+                        # Fetch user data
+                        if booking.get('user_id'):
+                            try:
+                                user_response = self._get_client().table("users").select("id, email, full_name").eq("id", booking['user_id']).execute()
+                                if user_response.data and len(user_response.data) > 0:
+                                    user = user_response.data[0]
+                                    enriched_booking['user_name'] = user.get('full_name')
+                                    enriched_booking['user_email'] = user.get('email')
+                                else:
+                                    enriched_booking['user_name'] = None
+                                    enriched_booking['user_email'] = None
+                            except Exception as e:
+                                print(f"Error fetching user data: {e}")
+                                enriched_booking['user_name'] = None
+                                enriched_booking['user_email'] = None
+                        else:
+                            enriched_booking['user_name'] = None
+                            enriched_booking['user_email'] = None
                         
-                        # Extract destination name
-                        if booking.get('destination'):
-                            enriched_booking['destination_name'] = booking['destination'].get('name')
-                        elif booking.get('event'):
-                            # Fallback to event name if no destination
-                            enriched_booking['destination_name'] = booking['event'].get('name')
+                        # Fetch destination data
+                        if booking.get('destination_id'):
+                            try:
+                                dest_response = self._get_client().table("destinations").select("id, name").eq("id", booking['destination_id']).execute()
+                                if dest_response.data and len(dest_response.data) > 0:
+                                    destination = dest_response.data[0]
+                                    enriched_booking['destination_name'] = destination.get('name')
+                                else:
+                                    enriched_booking['destination_name'] = None
+                            except Exception as e:
+                                print(f"Error fetching destination data: {e}")
+                                enriched_booking['destination_name'] = None
+                        elif booking.get('event_id'):
+                            # Fallback to event name
+                            try:
+                                event_response = self._get_client().table("events").select("id, name").eq("id", booking['event_id']).execute()
+                                if event_response.data and len(event_response.data) > 0:
+                                    event = event_response.data[0]
+                                    enriched_booking['destination_name'] = event.get('name')
+                                else:
+                                    enriched_booking['destination_name'] = None
+                            except Exception as e:
+                                print(f"Error fetching event data: {e}")
+                                enriched_booking['destination_name'] = None
+                        else:
+                            enriched_booking['destination_name'] = None
                         
                         enriched_bookings.append(enriched_booking)
                     
@@ -431,6 +462,9 @@ class SupabaseService:
                     
                 except Exception as inner_e:
                     print(f"Bookings query failed: {str(inner_e)}")
+                    print(f"Exception type: {type(inner_e)}")
+                    import traceback
+                    print(f"Full traceback: {traceback.format_exc()}")
                     return []
             
             bookings_data = await self._run_sync(_get_bookings)
@@ -566,6 +600,67 @@ class SupabaseService:
         except Exception as e:
             raise handle_supabase_error(e, "create booking")
     
+    def _validate_and_convert_booking_data(self, booking_data: dict) -> dict:
+        """
+        Validates and converts booking data types before database insertion.
+        This prevents data type mismatch errors with PostgreSQL.
+        """
+        # Create a copy to avoid modifying the original dict
+        data = booking_data.copy()
+
+        # Convert Decimal to float for total_amount
+        if 'total_amount' in data and isinstance(data['total_amount'], Decimal):
+            data['total_amount'] = float(data['total_amount'])
+
+        # Ensure seats is an integer
+        if 'seats' in data and data['seats'] is not None:
+            try:
+                data['seats'] = int(data['seats'])
+            except (ValueError, TypeError):
+                raise ValidationException(
+                    "Invalid data type for 'seats'. Must be a whole number.",
+                    field="seats",
+                    value=data['seats']
+                )
+
+        return data
+
+    def _safe_convert_booking_data(self, booking_data: dict) -> dict:
+        """
+        Safely converts booking data types for Pydantic model compatibility.
+        Handles type conversion issues that may occur when creating Booking objects.
+        """
+        # Create a copy to avoid modifying the original dict
+        data = booking_data.copy()
+
+        # Convert Decimal to float for total_amount
+        if 'total_amount' in data and isinstance(data['total_amount'], Decimal):
+            data['total_amount'] = float(data['total_amount'])
+
+        # Ensure seats is an integer
+        if 'seats' in data and data['seats'] is not None:
+            try:
+                data['seats'] = int(data['seats'])
+            except (ValueError, TypeError):
+                data['seats'] = 1  # Default fallback
+
+        # Ensure string fields are properly handled and preserved
+        string_fields = ['booking_status', 'payment_status', 'user_name', 'user_email', 'destination_name']
+        for field in string_fields:
+            if field in data and data[field] is not None and not isinstance(data[field], str):
+                data[field] = str(data[field])
+            # Preserve None values for enriched fields - but don't overwrite existing values
+            elif field in ['user_name', 'user_email', 'destination_name'] and field not in data:
+                data[field] = None
+        
+        # Debug logging to track enriched field preservation
+        print(f"DEBUG - _safe_convert_booking_data for booking {data.get('id', 'unknown')}:")
+        print(f"  user_name: {data.get('user_name')}")
+        print(f"  user_email: {data.get('user_email')}")
+        print(f"  destination_name: {data.get('destination_name')}")
+
+        return data
+
     async def create_destination_booking(self, booking_data: dict) -> Booking:
         """Create new destination-based booking"""
 
@@ -716,10 +811,10 @@ class SupabaseService:
                         query = query.eq("difficulty_level", filters["difficulty_level"])
                     
                     if filters.get("min_cost"):
-                        query = query.gte("average_cost_per_day", filters["min_cost"])
+                        query = query.gte("package_price", filters["min_cost"])
                     
                     if filters.get("max_cost"):
-                        query = query.lte("average_cost_per_day", filters["max_cost"])
+                        query = query.lte("package_price", filters["max_cost"])
                     
                     if "is_active" in filters:
                         query = query.eq("is_active", filters["is_active"])
@@ -787,9 +882,9 @@ class SupabaseService:
             destination_data.setdefault('country', 'India')
             
             # Convert Decimal to float for JSON serialization
-            if 'average_cost_per_day' in destination_data and isinstance(destination_data['average_cost_per_day'], Decimal):
-                destination_data['average_cost_per_day'] = float(destination_data['average_cost_per_day'])
-                print(f"DEBUG - Converted average_cost_per_day from Decimal to float: {destination_data['average_cost_per_day']}")
+            if 'package_price' in destination_data and isinstance(destination_data['package_price'], Decimal):
+                destination_data['package_price'] = float(destination_data['package_price'])
+                print(f"DEBUG - Converted package_price from Decimal to float: {destination_data['package_price']}")
             
             def _create_destination():
                 try:
@@ -831,8 +926,8 @@ class SupabaseService:
             update_data["updated_at"] = datetime.utcnow().isoformat()
             
             # Convert Decimal to float for JSON serialization
-            if 'average_cost_per_day' in update_data and isinstance(update_data['average_cost_per_day'], Decimal):
-                update_data['average_cost_per_day'] = float(update_data['average_cost_per_day'])
+            if 'package_price' in update_data and isinstance(update_data['package_price'], Decimal):
+                update_data['package_price'] = float(update_data['package_price'])
             
             def _update_destination():
                 response = self._get_client().table("destinations").update(update_data).eq("id", destination_id).execute()
@@ -1198,3 +1293,70 @@ class SupabaseService:
             
         except Exception as e:
             raise handle_supabase_error(e, "get gallery stats")
+
+    # App Settings Methods
+    async def get_app_settings(self) -> Dict[str, Any]:
+        """Get application settings"""
+        try:
+            def _get_settings():
+                client = self._get_client()
+                response = client.table("app_settings").select("*").eq("id", 1).execute()
+                
+                if not response.data:
+                    # Return default settings if none exist
+                    return {
+                        "id": 1,
+                        "company_name": "SafarSaga Trips",
+                        "contact_email": "safarsagatrips@gmail.com",
+                        "contact_phone": "+91 9311706027",
+                        "address": "shop no 3 basement, Plot no 1,Tajpur Rd, Badarpur Extension,Tajpur, badarpur border, NewDelhi, Delhi 110044",
+                        "currency": "INR",
+                        "gst_rate": 5.00,
+                        "maintenance_mode": False,
+                        "notify_on_new_booking": True,
+                        "notify_on_new_user": True,
+                        "notify_on_payment": True,
+                        "terms_and_conditions": "Standard booking terms and conditions apply. Please read carefully before confirming your booking."
+                    }
+                
+                return response.data[0]
+            
+            settings = await self._run_sync(_get_settings)
+            return settings
+            
+        except Exception as e:
+            raise handle_supabase_error(e, "get app settings")
+
+    async def update_app_settings(self, settings_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Update application settings"""
+        try:
+            def _update_settings():
+                client = self._get_client()
+                
+                # Remove None values to avoid overwriting with nulls
+                update_data = {k: v for k, v in settings_data.items() if v is not None}
+                
+                # Always update the updated_at timestamp
+                update_data["updated_at"] = datetime.utcnow().isoformat()
+                
+                # Check if settings row exists
+                existing = client.table("app_settings").select("id").eq("id", 1).execute()
+                
+                if not existing.data:
+                    # Insert new settings row
+                    update_data["id"] = 1
+                    response = client.table("app_settings").insert(update_data).execute()
+                else:
+                    # Update existing settings
+                    response = client.table("app_settings").update(update_data).eq("id", 1).execute()
+                
+                if not response.data:
+                    raise DatabaseException("Failed to update app settings")
+                
+                return response.data[0]
+            
+            updated_settings = await self._run_sync(_update_settings)
+            return updated_settings
+            
+        except Exception as e:
+            raise handle_supabase_error(e, "update app settings")

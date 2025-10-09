@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const CTASection = () => {
   return (
@@ -24,20 +25,23 @@ const CTASection = () => {
             Join thousands of travelers who have trusted us to create their perfect getaway. Your dream destination awaits!
           </p>
 
-          <div className="flex flex-col gap-3 sm:gap-4 justify-center max-w-md sm:max-w-none mx-auto">
-            <Button
-              size="lg"
-              className="bg-orange-500 hover:bg-orange-600 text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base lg:text-lg w-full sm:w-auto"
-            >
-              Plan Your Trip Today
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white text-white hover:bg-white hover:text-gray-900 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base lg:text-lg w-full sm:w-auto"
-            >
-              View Our Packages
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center max-w-md sm:max-w-none mx-auto">
+            <Link href="/packages">
+              <Button
+                size="lg"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base lg:text-lg w-full sm:w-auto"
+              >
+                Plan Your Trip Today
+              </Button>
+            </Link>
+            <Link href="/packages">
+              <Button
+                size="lg"
+                className="bg-white text-gray-900 hover:bg-gray-100 hover:text-gray-800 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base lg:text-lg w-full sm:w-auto"
+              >
+                View Our Packages
+              </Button>
+            </Link>
           </div>
 
           <div className="mt-8 sm:mt-10 lg:mt-12 text-gray-300">

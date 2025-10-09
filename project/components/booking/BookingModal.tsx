@@ -60,8 +60,9 @@ export function BookingModal({
   // Booking result
   const [bookingResult, setBookingResult] = useState<any>(null)
 
-  const totalAmount = destination.price * seats
-  const savings = destination.originalPrice ? (destination.originalPrice - destination.price) * seats : 0
+  // Total amount will be calculated by backend based on package price
+  const displayPrice = destination.price // Package price per person for display
+  const savings = destination.originalPrice ? (destination.originalPrice - destination.price) : 0
 
   const handleBookingSubmit = async () => {
     // Validate phone number
@@ -102,7 +103,6 @@ export function BookingModal({
       const bookingRequest: BookingRequest = {
         destinationId: destination.id,
         seats: seatsNumber, // Ensure seats is a number
-        totalAmount: totalAmount, // Pass the calculated total amount
         travelDate: travelDate || undefined,
         specialRequests: specialRequests?.trim() || undefined,
         contactInfo: {
@@ -357,7 +357,7 @@ export function BookingModal({
               <h4 className="font-medium text-gray-900 mb-3">Price Summary</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span>Price per person:</span>
+                  <span>Package price:</span>
                   <span>₹{destination.price.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
@@ -372,8 +372,8 @@ export function BookingModal({
                 )}
                 <div className="border-t pt-2 mt-2">
                   <div className="flex justify-between font-semibold text-lg">
-                    <span>Total Amount:</span>
-                    <span className="text-orange-500">₹{totalAmount.toLocaleString()}</span>
+                    <span>Total will be calculated by system</span>
+                    <span className="text-orange-500">Final amount on next step</span>
                   </div>
                 </div>
               </div>

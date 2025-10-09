@@ -4,6 +4,7 @@
  */
 
 import { TokenManager } from './auth-api'
+import apiClient, { getErrorMessage } from './api-client'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -119,17 +120,11 @@ export class BookingService {
         }
       }
 
-      // Use provided total amount or calculate from seats
-      const total_amount = bookingRequest.totalAmount
-        ? Number(bookingRequest.totalAmount)
-        : Number(bookingRequest.seats) * 5000 // Fallback calculation
-
-      // Prepare payload with proper data types as requested
+      // Let backend calculate total_amount based on destination pricing
+      // Remove hardcoded pricing logic
       const payload = {
-        user_id,
         destination_id: bookingRequest.destinationId,
         seats: Number(bookingRequest.seats), // Ensure seats is sent as number
-        total_amount: Number(total_amount), // Ensure total_amount is sent as number
         travel_date: bookingRequest.travelDate ? new Date(bookingRequest.travelDate).toISOString() : null,
         contact_info: {
           phone: bookingRequest.contactInfo.phone.trim(),
@@ -143,10 +138,6 @@ export class BookingService {
         throw new Error('Invalid number of seats. Please select between 1 and 10 seats.')
       }
 
-      if (isNaN(payload.total_amount) || payload.total_amount <= 0) {
-        throw new Error('Invalid total amount. Please check the booking details.')
-      }
-
       // Ensure travel_date is properly formatted if provided
       if (payload.travel_date && isNaN(new Date(payload.travel_date).getTime())) {
         throw new Error('Invalid travel date format.')
@@ -154,27 +145,13 @@ export class BookingService {
 
       console.log('Sending payload to backend:', payload)
 
-      // Create booking via backend API (direct call to FastAPI)
-      const response = await fetch(`${API_BASE_URL}/api/bookings`, {
-        method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify(payload)
-      })
+      // Create booking via backend API using centralized client
+      const response = await apiClient.post('/api/bookings', payload)
+      console.log('Backend booking created successfully:', response.data)
 
-      console.log('Backend response status:', response.status)
-
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Backend booking created successfully:', data)
-
-        // Transform the backend booking response
-        const transformedBooking = this.transformBackendBooking(data)
-        return transformedBooking
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Backend booking creation failed:', errorData)
-        throw new Error(errorData.detail || errorData.message || `Booking failed: ${response.statusText}`)
-      }
+      // Transform the backend booking response
+      const transformedBooking = this.transformBackendBooking(response.data)
+      return transformedBooking
     } catch (error) {
       console.error('Error creating booking:', error)
       if (error instanceof Error) {
@@ -191,21 +168,9 @@ export class BookingService {
     console.log('Fetching booking with ID:', bookingId)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}`, {
-        headers: this.getAuthHeaders()
-      })
-
-      console.log('Backend response status for booking fetch:', response.status)
-
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Backend booking fetched successfully:', data)
-        return this.transformBackendBooking(data)
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Backend booking fetch failed:', errorData)
-        throw new Error(errorData.detail || errorData.message || `Booking not found: ${response.statusText}`)
-      }
+      const response = await apiClient.get(`/api/bookings/${bookingId}`)
+      console.log('Backend booking fetched successfully:', response.data)
+      return this.transformBackendBooking(response.data)
     } catch (error) {
       console.error('Error fetching booking:', error)
       if (error instanceof Error) {
@@ -222,34 +187,22 @@ export class BookingService {
     console.log('Fetching user bookings from backend')
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/bookings`, {
-        headers: this.getAuthHeaders()
-      })
+      const response = await apiClient.get('/api/bookings')
+      console.log('Backend bookings data:', response.data)
 
-      console.log('User bookings response status:', response.status)
+      let bookings: BookingResponse[] = []
 
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Backend bookings data:', data)
-
-        let bookings: BookingResponse[] = []
-
-        // Handle paginated response from backend
-        if (data.items && Array.isArray(data.items)) {
-          bookings = data.items.map((booking: any) => this.transformBackendBooking(booking))
-        }
-        // Handle direct array response
-        else if (Array.isArray(data)) {
-          bookings = data.map((booking: any) => this.transformBackendBooking(booking))
-        }
-
-        console.log('Transformed bookings:', bookings.length)
-        return bookings
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Failed to fetch user bookings:', errorData)
-        throw new Error(errorData.detail || errorData.message || 'Failed to fetch bookings')
+      // Handle paginated response from backend
+      if (response.data.items && Array.isArray(response.data.items)) {
+        bookings = response.data.items.map((booking: any) => this.transformBackendBooking(booking))
       }
+      // Handle direct array response
+      else if (Array.isArray(response.data)) {
+        bookings = response.data.map((booking: any) => this.transformBackendBooking(booking))
+      }
+
+      console.log('Transformed bookings:', bookings.length)
+      return bookings
     } catch (error) {
       console.error('Error fetching user bookings:', error)
       if (error instanceof Error) {
@@ -269,29 +222,16 @@ export class BookingService {
       // Generate transaction ID if not provided
       const transactionId = paymentRequest.transactionId || this.generateTransactionId()
 
-      const response = await fetch(`${API_BASE_URL}/api/bookings/${paymentRequest.bookingId}/confirm-payment`, {
-        method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify({
-          payment_method: paymentRequest.paymentMethod,
-          transaction_id: transactionId
-        })
+      const response = await apiClient.post(`/api/bookings/${paymentRequest.bookingId}/confirm-payment`, {
+        payment_method: paymentRequest.paymentMethod,
+        transaction_id: transactionId
       })
 
-      console.log('Payment response status:', response.status)
+      console.log('Payment processed successfully:', response.data)
 
-      if (response.ok) {
-        const data = await response.json()
-        console.log('Payment processed successfully:', data)
-
-        // Transform the updated booking
-        const updatedBooking = this.transformBackendBooking(data.booking || data)
-        return updatedBooking
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Backend payment processing failed:', errorData)
-        throw new Error(errorData.detail || errorData.message || `Payment failed: ${response.statusText}`)
-      }
+      // Transform the updated booking
+      const updatedBooking = this.transformBackendBooking(response.data.booking || response.data)
+      return updatedBooking
     } catch (error) {
       console.error('Error processing payment:', error)
       if (error instanceof Error) {
@@ -308,21 +248,12 @@ export class BookingService {
     console.log('Cancelling booking:', bookingId)
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/bookings/${bookingId}`, {
-        method: 'DELETE',
-        headers: this.getAuthHeaders()
+      await apiClient.patch(`/api/bookings/${bookingId}`, {
+        booking_status: 'cancelled'
       })
 
-      console.log('Cancellation response status:', response.status)
-
-      if (response.ok) {
-        console.log('Booking cancelled successfully')
-        return
-      } else {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('Backend booking cancellation failed:', errorData)
-        throw new Error(errorData.detail || errorData.message || `Cancellation failed: ${response.statusText}`)
-      }
+      console.log('Booking cancelled successfully')
+      return
     } catch (error) {
       console.error('Error cancelling booking:', error)
       if (error instanceof Error) {
@@ -364,7 +295,7 @@ export class BookingService {
           ? `${destination.name}, ${destination.state}`
           : event.destination || 'Unknown Location',
         price: isDestinationBooking
-          ? Number(destination.average_cost_per_day || 0)
+          ? Number(destination.package_price || 0)
           : Number(event.price || backendBooking.total_amount / backendBooking.seats || 0),
         originalPrice: undefined, // Destinations don't have original price concept
         duration: isDestinationBooking ? '2N/3D' : this.calculateDuration(event.start_date, event.end_date),

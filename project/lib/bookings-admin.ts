@@ -2,7 +2,7 @@
  * Admin Booking Management Service
  */
 
-import adminApi, { getErrorMessage } from './admin-api'
+import apiClient, { getErrorMessage } from './api-client'
 
 export interface AdminBookingStats {
   total_bookings: number
@@ -52,7 +52,7 @@ export interface BookingDetails extends BookingListItem {
   destination_details?: {
     name: string
     location: string
-    average_cost_per_day: number
+    package_price: number
   }
 }
 
@@ -79,7 +79,7 @@ export class BookingsAdminService {
    */
   static async getAdminStats(): Promise<AdminBookingStats> {
     try {
-      const response = await adminApi.get('/api/bookings/admin/stats')
+      const response = await apiClient.get('/api/bookings/admin/stats')
       return response.data
     } catch (error) {
       throw new Error(getErrorMessage(error))
@@ -98,11 +98,11 @@ export class BookingsAdminService {
       const params: any = { limit, offset }
       
       if (filters.user_id) params.user_id = filters.user_id
-      if (filters.destination_id) params.event_id = filters.destination_id
+      if (filters.destination_id) params.destination_id = filters.destination_id
       if (filters.booking_status) params.booking_status = filters.booking_status
       if (filters.payment_status) params.payment_status = filters.payment_status
 
-      const response = await adminApi.get('/api/bookings/', { params })
+      const response = await apiClient.get('/api/bookings/', { params })
       return response.data
     } catch (error) {
       throw new Error(getErrorMessage(error))
@@ -114,7 +114,7 @@ export class BookingsAdminService {
    */
   static async getBookingById(bookingId: string): Promise<BookingDetails> {
     try {
-      const response = await adminApi.get(`/api/bookings/${bookingId}`)
+      const response = await apiClient.get(`/api/bookings/${bookingId}`)
       return response.data
     } catch (error) {
       throw new Error(getErrorMessage(error))
@@ -133,7 +133,7 @@ export class BookingsAdminService {
     }
   ): Promise<BookingDetails> {
     try {
-      const response = await adminApi.put(`/api/bookings/${bookingId}`, updates)
+      const response = await apiClient.patch(`/api/bookings/${bookingId}`, updates)
       return response.data
     } catch (error) {
       throw new Error(getErrorMessage(error))
@@ -145,7 +145,7 @@ export class BookingsAdminService {
    */
   static async cancelBooking(bookingId: string): Promise<void> {
     try {
-      await adminApi.delete(`/api/bookings/${bookingId}`)
+      await apiClient.patch(`/api/bookings/${bookingId}`, { booking_status: 'cancelled' })
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }
@@ -156,7 +156,7 @@ export class BookingsAdminService {
    */
   static async getBookingsByUser(userId: string): Promise<BookingListItem[]> {
     try {
-      const response = await adminApi.get('/api/bookings/', {
+      const response = await apiClient.get('/api/bookings/', {
         params: { user_id: userId, limit: 100 }
       })
       return response.data.items || []

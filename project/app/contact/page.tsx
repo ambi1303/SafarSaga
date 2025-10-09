@@ -415,11 +415,10 @@ export default function ContactPage() {
               <a href="https://wa.me/919311706027?text=Hello! I would like to know more about your travel packages." target="_blank" rel="noopener noreferrer">
                 <Button 
                   size="lg" 
-                  variant="outline" 
-                  className="border-white text-white hover:bg-white hover:text-orange-500 font-medium w-full"
+                  className="bg-green-500 hover:bg-green-600 text-white font-medium w-full"
                 >
                   <MessageCircle className="h-5 w-5 mr-2" />
-                  WhatsApp Chat
+                  Chat on WhatsApp
                 </Button>
               </a>
             </div>

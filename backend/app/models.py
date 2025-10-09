@@ -178,6 +178,7 @@ class User(BaseModel):
     phone: Optional[str] = None
     is_admin: bool = False
     is_active: Optional[bool] = True
+    promoted_by: Optional[str] = None  # ID of admin who promoted this user
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 
@@ -190,7 +191,7 @@ class Destination(BaseModel):
     description: Optional[str] = None
     featured_image_url: Optional[str] = None
     gallery_images: Optional[List[str]] = None
-    average_cost_per_day: Optional[Decimal] = None
+    package_price: Optional[Decimal] = None
     difficulty_level: Optional[DifficultyLevel] = None
     best_time_to_visit: Optional[str] = None
     popular_activities: Optional[List[str]] = None
@@ -210,7 +211,7 @@ class DestinationCreate(BaseModel):
     description: Optional[str] = Field(None, max_length=2000)
     featured_image_url: Optional[str] = Field(None, max_length=500)
     gallery_images: Optional[List[str]] = None
-    average_cost_per_day: Optional[Decimal] = Field(None, ge=0)
+    package_price: Optional[Decimal] = Field(None, ge=0)
     difficulty_level: Optional[DifficultyLevel] = None
     best_time_to_visit: Optional[str] = Field(None, max_length=200)
     popular_activities: Optional[List[str]] = None
@@ -225,7 +226,7 @@ class DestinationUpdate(BaseModel):
     description: Optional[str] = Field(None, max_length=2000)
     featured_image_url: Optional[str] = Field(None, max_length=500)
     gallery_images: Optional[List[str]] = None
-    average_cost_per_day: Optional[Decimal] = Field(None, ge=0)
+    package_price: Optional[Decimal] = Field(None, ge=0)
     difficulty_level: Optional[DifficultyLevel] = None
     best_time_to_visit: Optional[str] = Field(None, max_length=200)
     popular_activities: Optional[List[str]] = None
@@ -380,3 +381,87 @@ class ApiResponse(BaseModel):
     message: str
     success: bool = True
     data: Optional[Any] = None
+
+
+# App Settings Models
+class AppSettings(BaseModel):
+    """Complete app settings model"""
+    id: int = 1
+    
+    # General Settings (Company Profile)
+    company_name: Optional[str] = None
+    logo_url: Optional[str] = None
+    contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
+    address: Optional[str] = None
+    
+    # Social Media Links
+    social_facebook_url: Optional[str] = None
+    social_instagram_url: Optional[str] = None
+    social_twitter_url: Optional[str] = None
+    social_linkedin_url: Optional[str] = None
+    social_youtube_url: Optional[str] = None
+    
+    # Booking & Payment Settings
+    payment_gateway_key: Optional[str] = None
+    payment_gateway_secret: Optional[str] = None
+    currency: Optional[str] = None
+    gstin: Optional[str] = None
+    gst_rate: Optional[Decimal] = None
+    terms_and_conditions: Optional[str] = None
+    
+    # System Settings
+    maintenance_mode: Optional[bool] = None
+    notify_on_new_booking: Optional[bool] = None
+    notify_on_new_user: Optional[bool] = None
+    notify_on_payment: Optional[bool] = None
+    
+    # Metadata
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+    
+    class Config:
+        extra = "ignore"
+
+class AppSettingsUpdate(BaseModel):
+    """Model for updating app settings"""
+    # General Settings (Company Profile)
+    company_name: Optional[str] = Field(None, max_length=200)
+    logo_url: Optional[str] = Field(None, max_length=500)
+    contact_email: Optional[str] = Field(None, max_length=100)
+    contact_phone: Optional[str] = Field(None, max_length=20)
+    address: Optional[str] = Field(None, max_length=500)
+    
+    # Social Media Links
+    social_facebook_url: Optional[str] = Field(None, max_length=200)
+    social_instagram_url: Optional[str] = Field(None, max_length=200)
+    social_twitter_url: Optional[str] = Field(None, max_length=200)
+    social_linkedin_url: Optional[str] = Field(None, max_length=200)
+    social_youtube_url: Optional[str] = Field(None, max_length=200)
+    
+    # Booking & Payment Settings
+    payment_gateway_key: Optional[str] = Field(None, max_length=200)
+    payment_gateway_secret: Optional[str] = Field(None, max_length=200)
+    currency: Optional[str] = Field(None, max_length=10)
+    gstin: Optional[str] = Field(None, max_length=20)
+    gst_rate: Optional[Decimal] = Field(None, ge=0, le=100)
+    terms_and_conditions: Optional[str] = Field(None, max_length=5000)
+    
+    # System Settings
+    maintenance_mode: Optional[bool] = None
+    notify_on_new_booking: Optional[bool] = None
+    notify_on_new_user: Optional[bool] = None
+    notify_on_payment: Optional[bool] = None
+
+class AppSettingsResponse(AppSettings):
+    """Response model for app settings (excludes sensitive data)"""
+    # Override sensitive fields to exclude them from responses
+    payment_gateway_key: Optional[str] = Field(None, description="Hidden for security")
+    payment_gateway_secret: Optional[str] = Field(None, description="Hidden for security")
+    
+    @validator('payment_gateway_key', 'payment_gateway_secret', pre=True, always=True)
+    def mask_sensitive_data(cls, v):
+        """Mask sensitive payment gateway data in responses"""
+        if v and len(v) > 4:
+            return f"****{v[-4:]}"  # Show only last 4 characters
+        return "****" if v else None

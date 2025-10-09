@@ -103,10 +103,12 @@ const FAQ = () => {
                 Our travel experts are standing by to help you plan the perfect trip
               </p>
               <div className="flex flex-col gap-3 sm:gap-4 justify-center">
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm lg:text-base py-2 sm:py-2.5 lg:py-3">
-                  <Phone className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 mr-2" />
-                  <span className="hidden sm:inline">Call Now: 1-800-SAFAR-SAGA</span>
-                  <span className="sm:hidden">Call Now</span>
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm lg:text-base py-2 sm:py-2.5 lg:py-3" asChild>
+                  <a href="tel:+919311706027">
+                    <Phone className="h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 mr-2" />
+                    <span className="hidden sm:inline">Call Now: +91 9311706027</span>
+                    <span className="sm:hidden">Call Now</span>
+                  </a>
                 </Button>
                 <Button size="sm" variant="outline" className="text-xs sm:text-sm lg:text-base py-2 sm:py-2.5 lg:py-3">
                   Live Chat Support

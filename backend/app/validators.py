@@ -102,6 +102,32 @@ class DestinationBookingValidator:
         return total_amount
     
     @staticmethod
+    def calculate_package_booking_amount(destination: Destination, seats: int) -> Decimal:
+        """Calculate total package booking amount for destination"""
+        # SAFETY: Ensure seats is properly converted
+        if isinstance(seats, str):
+            try:
+                seats = int(seats.strip())
+            except (ValueError, AttributeError):
+                raise ValueError(f"Invalid seat count: '{seats}' is not a valid number")
+        elif isinstance(seats, float):
+            if seats.is_integer():
+                seats = int(seats)
+            else:
+                raise ValueError(f"Seat count must be a whole number: {seats}")
+        
+        if not destination.package_price:
+            # Default price if not set
+            package_price = Decimal('15000.00')
+        else:
+            package_price = destination.package_price
+        
+        # Calculate total: package_price * seats (no duration multiplier)
+        total_amount = package_price * Decimal(str(seats))
+        
+        return total_amount
+    
+    @staticmethod
     def validate_booking_status_transition(current_status: str, new_status: str) -> None:
         """Validate booking status transitions"""
         valid_transitions = {
@@ -194,13 +220,11 @@ def validate_destination_booking(destination: Destination, booking_data: Booking
     # Validate contact info
     validator.validate_contact_info(booking_data.contact_info)
     
-    # Calculate duration and amount
-    duration_days = BookingBusinessRules.get_duration_days(booking_data.travel_date)
-    total_amount = validator.calculate_booking_amount(destination, booking_data.seats, duration_days)
+    # Calculate package amount (no duration multiplier)
+    total_amount = validator.calculate_package_booking_amount(destination, booking_data.seats)
     
     return {
         'destination': destination,
-        'duration_days': duration_days,
         'total_amount': total_amount,
         'validated': True
     }

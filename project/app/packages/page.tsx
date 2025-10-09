@@ -224,8 +224,8 @@ export default function PackagesPage() {
         id: dest.id, // Keep original UUID format
         name: dest.name,
         destination: `${dest.name}, ${dest.state}`,
-        price: Math.round(dest.average_cost_per_day ? dest.average_cost_per_day * 3 : 5499), // 3 days default
-        originalPrice: Math.round(dest.average_cost_per_day ? dest.average_cost_per_day * 3 * 1.4 : 7699), // 40% markup
+        price: dest.package_price || 0, // Use actual package price from database
+        originalPrice: Math.round((dest.package_price || 0) * 1.4), // 40% markup on package price
         duration: "2N/3D", // Default duration
         groupSize: "2-8 people", // Default group size
         image: dest.featured_image_url || 'https://images.pexels.com/photos/1271619/pexels-photo-1271619.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop',

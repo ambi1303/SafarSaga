@@ -81,8 +81,8 @@ export default function DestinationsPage() {
           name: dest.name,
           location: dest.state || 'India',
           type: dest.difficulty_level || 'Adventure',
-          price: dest.average_cost_per_day || 5999,
-          originalPrice: (dest.average_cost_per_day || 5999) * 1.3, // Mock original price
+          price: dest.package_price || 0,
+          originalPrice: Math.round((dest.package_price || 0) * 1.3), // Mock original price
           duration: '2N/3D', // Default duration
           rating: 4.8, // Mock rating
           reviews: 100, // Mock reviews

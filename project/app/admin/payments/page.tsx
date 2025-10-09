@@ -148,6 +148,8 @@ export default function AdminPaymentsPage() {
       key: 'booking_id',
       label: 'Booking ID',
       sortable: true,
+      width: '140px',
+      minWidth: '140px',
       render: (payment) => (
         <span className="font-mono text-xs">{payment.booking_id?.slice(0, 8) || 'N/A'}</span>
       ),
@@ -156,10 +158,12 @@ export default function AdminPaymentsPage() {
       key: 'user_name',
       label: 'User',
       sortable: true,
+      width: '200px',
+      minWidth: '180px',
       render: (payment) => (
         <div>
-          <p className="font-medium">{payment.user_name || 'N/A'}</p>
-          <p className="text-xs text-gray-500">{payment.user_email}</p>
+          <p className="font-medium text-sm">{payment.user_name || 'N/A'}</p>
+          <p className="text-xs text-gray-500 truncate">{payment.user_email}</p>
         </div>
       ),
     },
@@ -167,16 +171,30 @@ export default function AdminPaymentsPage() {
       key: 'destination_name',
       label: 'Destination',
       sortable: true,
+      width: '180px',
+      minWidth: '150px',
+      className: 'max-w-0',
+      render: (payment) => (
+        <span className="truncate block" title={payment.destination_name}>
+          {payment.destination_name || 'N/A'}
+        </span>
+      ),
     },
     {
       key: 'amount',
       label: 'Amount',
       sortable: true,
-      render: (payment) => formatCurrency(payment.amount),
+      width: '120px',
+      minWidth: '100px',
+      render: (payment) => (
+        <span className="font-medium">{formatCurrency(payment.amount)}</span>
+      ),
     },
     {
       key: 'payment_status',
       label: 'Status',
+      width: '100px',
+      minWidth: '100px',
       render: (payment) => (
         <StatusBadge status={payment.payment_status} type="payment" />
       ),
@@ -184,44 +202,52 @@ export default function AdminPaymentsPage() {
     {
       key: 'payment_date',
       label: 'Payment Date',
-      render: (payment) => formatDate(payment.payment_date),
+      width: '130px',
+      minWidth: '120px',
+      render: (payment) => (
+        <span className="text-sm">{formatDate(payment.payment_date)}</span>
+      ),
     },
     {
       key: 'actions',
       label: 'Actions',
+      width: '280px',
+      minWidth: '280px',
       render: (payment) => (
-        <div className="flex space-x-2">
+        <div className="flex space-x-1">
           <Button
             size="sm"
             variant="outline"
             onClick={() => payment.booking_id && handleViewPaymentInfo(payment.booking_id)}
             disabled={!payment.booking_id}
+            className="text-xs px-2 py-1"
           >
-            <Eye className="h-4 w-4 mr-1" />
+            <Eye className="h-3 w-3 mr-1" />
             View
           </Button>
           {payment.payment_status === 'unpaid' && payment.booking_id && (
             <>
               <Button
                 size="sm"
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-green-600 hover:bg-green-700 text-xs px-2 py-1"
                 onClick={() => {
                   setApprovingBookingId(payment.booking_id)
                   setApproveDialogOpen(true)
                 }}
               >
-                <CheckCircle className="h-4 w-4 mr-1" />
+                <CheckCircle className="h-3 w-3 mr-1" />
                 Approve
               </Button>
               <Button
                 size="sm"
                 variant="destructive"
+                className="text-xs px-2 py-1"
                 onClick={() => {
                   setRejectingBookingId(payment.booking_id)
                   setRejectDialogOpen(true)
                 }}
               >
-                <XCircle className="h-4 w-4 mr-1" />
+                <XCircle className="h-3 w-3 mr-1" />
                 Reject
               </Button>
             </>

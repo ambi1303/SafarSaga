@@ -9,6 +9,9 @@ export interface Column<T> {
   label: string
   sortable?: boolean
   render?: (item: T) => React.ReactNode
+  width?: string
+  minWidth?: string
+  className?: string
 }
 
 interface DataTableProps<T> {
@@ -82,13 +85,17 @@ export function DataTable<T>({
     <div className="bg-white rounded-lg shadow overflow-hidden">
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
+        <table className="w-full table-fixed divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
               {columns.map((column) => (
                 <th
                   key={column.key}
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className={`px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider ${column.className || ''}`}
+                  style={{
+                    width: column.width,
+                    minWidth: column.minWidth || '120px'
+                  }}
                 >
                   {column.sortable ? (
                     <button
@@ -115,7 +122,11 @@ export function DataTable<T>({
                 {columns.map((column) => (
                   <td
                     key={column.key}
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                    className={`px-6 py-4 text-sm text-gray-900 ${column.key === 'actions' ? 'whitespace-nowrap' : ''} ${column.className || ''}`}
+                    style={{
+                      width: column.width,
+                      minWidth: column.minWidth || '120px'
+                    }}
                   >
                     {column.render
                       ? column.render(item)

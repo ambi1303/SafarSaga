@@ -12,6 +12,7 @@ from app.models import (
     Booking, BookingCreate, BookingUpdate, BookingStatus, PaymentStatus,
     PaginatedResponse, User, Event, Destination, BookingBusinessRules
 )
+from app.validators import DestinationBookingValidator
 from pydantic import BaseModel
 from app.middleware.auth import get_current_user, get_admin_user
 from app.services.supabase_service import SupabaseService
@@ -354,12 +355,10 @@ async def create_booking(
                 "destination_inactive"
             )
         
-        # Calculate booking amount (Pydantic already validated seats)
-        duration_days = 3  # Default duration for destination bookings
-        total_amount = BookingBusinessRules.calculate_booking_amount(
-            destination.average_cost_per_day, 
-            booking_data.seats, 
-            duration_days
+        # Calculate package booking amount (no duration multiplier)
+        total_amount = DestinationBookingValidator.calculate_package_booking_amount(
+            destination, 
+            booking_data.seats
         )
         
         # Check for duplicate bookings only if travel date is specified
@@ -404,7 +403,7 @@ async def create_booking(
             except ValueError:
                 travel_date_iso = booking_data.travel_date
         
-        # Prepare create data (Pydantic has already validated all fields)
+        # Prepare create data with proper validation and conversion
         create_data = {
             "user_id": current_user.id,
             "destination_id": booking_data.destination_id,
@@ -417,8 +416,11 @@ async def create_booking(
             "payment_status": PaymentStatus.UNPAID.value
         }
         
+        # Apply data validation and conversion before creating booking
+        validated_data = supabase_service._validate_and_convert_booking_data(create_data)
+        
         # Create destination booking
-        booking = await supabase_service.create_destination_booking(create_data)
+        booking = await supabase_service.create_destination_booking(validated_data)
         
         return booking
         
@@ -866,73 +868,5 @@ async def get_user_bookings(
         )
 
 
-@router.get(
-    "/stats/summary",
-    tags=["Bookings"],
-    summary="Get Booking Statistics",
-    description="Get booking statistics and metrics (Admin only)"
-)
-async def get_booking_stats(current_user: User = Depends(get_admin_user)):
-    """
-    Get comprehensive booking statistics and metrics.
-    
-    Returns:
-    - Total bookings by status
-    - Revenue metrics
-    - Popular events
-    - Recent booking trends
-    
-    Requires admin privileges.
-    """
-    try:
-        # Get all bookings for statistics
-        all_bookings, total = await supabase_service.get_bookings({}, limit=1000, offset=0)
-        
-        # Calculate statistics
-        stats = {
-            "total_bookings": total,
-            "pending_bookings": len([b for b in all_bookings if b.booking_status == BookingStatus.PENDING]),
-            "confirmed_bookings": len([b for b in all_bookings if b.booking_status == BookingStatus.CONFIRMED]),
-            "cancelled_bookings": len([b for b in all_bookings if b.booking_status == BookingStatus.CANCELLED]),
-            "paid_bookings": len([b for b in all_bookings if b.payment_status == PaymentStatus.PAID]),
-            "unpaid_bookings": len([b for b in all_bookings if b.payment_status == PaymentStatus.UNPAID]),
-            "total_revenue": sum([float(b.total_amount) for b in all_bookings if b.payment_status == PaymentStatus.PAID]),
-            "average_booking_value": 0,
-            "total_seats_booked": sum([b.seats for b in all_bookings if b.booking_status == BookingStatus.CONFIRMED])
-        }
-        
-        # Calculate average booking value
-        paid_bookings = [b for b in all_bookings if b.payment_status == PaymentStatus.PAID]
-        if paid_bookings:
-            stats["average_booking_value"] = stats["total_revenue"] / len(paid_bookings)
-        
-        # Event popularity (top 5)
-        event_bookings = {}
-        for booking in all_bookings:
-            if booking.event and booking.booking_status == BookingStatus.CONFIRMED:
-                event_id = booking.event.id
-                if event_id not in event_bookings:
-                    event_bookings[event_id] = {
-                        "event_name": booking.event.name,
-                        "destination": booking.event.destination,
-                        "bookings": 0,
-                        "seats": 0
-                    }
-                event_bookings[event_id]["bookings"] += 1
-                event_bookings[event_id]["seats"] += booking.seats
-        
-        popular_events = sorted(
-            event_bookings.values(), 
-            key=lambda x: x["bookings"], 
-            reverse=True
-        )[:5]
-        
-        stats["popular_events"] = popular_events
-        
-        return stats
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch booking statistics: {str(e)}"
-        )
+# Removed redundant /stats/summary endpoint - use /admin/stats instead
+# The /admin/stats endpoint uses efficient PostgreSQL RPC function

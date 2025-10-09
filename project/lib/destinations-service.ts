@@ -3,7 +3,7 @@
  * Handles destination data and operations
  */
 
-import adminApi, { getErrorMessage } from './admin-api'
+import apiClient, { getErrorMessage } from './api-client'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -18,7 +18,7 @@ export interface Destination {
   difficulty_level?: 'Easy' | 'Moderate' | 'Challenging'
   best_time_to_visit?: string
   popular_activities?: string[]
-  average_cost_per_day?: number
+  package_price?: number
   is_active: boolean
   created_at?: string
   updated_at?: string
@@ -61,7 +61,9 @@ export class DestinationsService {
         if (filters.offset) params.offset = filters.offset
       }
       
-      const response = await adminApi.get('/api/destinations/', { params })
+      console.log('Fetching destinations from backend with params:', params)
+      const response = await apiClient.get('/api/destinations/', { params })
+      console.log('Backend response:', response.data)
       
       return {
         items: response.data.items || [],
@@ -72,7 +74,7 @@ export class DestinationsService {
         has_prev: response.data.has_prev || false
       }
     } catch (error) {
-      console.error('Failed to fetch destinations:', error)
+      console.error('Failed to fetch destinations from backend:', error)
       throw new Error(getErrorMessage(error))
     }
   }
@@ -82,7 +84,7 @@ export class DestinationsService {
    */
   static async getDestination(destinationId: string): Promise<Destination | null> {
     try {
-      const response = await adminApi.get(`/api/destinations/${destinationId}`)
+      const response = await apiClient.get(`/api/destinations/${destinationId}`)
       return response.data
     } catch (error) {
       console.error('Failed to fetch destination:', error)
@@ -95,7 +97,7 @@ export class DestinationsService {
    */
   static async createDestination(destinationData: Partial<Destination>): Promise<Destination> {
     try {
-      const response = await adminApi.post('/api/destinations/', destinationData)
+      const response = await apiClient.post('/api/destinations/', destinationData)
       return response.data
     } catch (error) {
       console.error('Failed to create destination:', error)
@@ -111,7 +113,7 @@ export class DestinationsService {
       const dataToSend = { ...destinationData }
       delete dataToSend.id // Don't send ID in body
       
-      const response = await adminApi.put(`/api/destinations/${id}`, dataToSend)
+      const response = await apiClient.patch(`/api/destinations/${id}`, dataToSend)
       return response.data
     } catch (error) {
       console.error('Failed to update destination:', error)
@@ -124,7 +126,7 @@ export class DestinationsService {
    */
   static async deleteDestination(id: string): Promise<void> {
     try {
-      await adminApi.delete(`/api/destinations/${id}`)
+      await apiClient.delete(`/api/destinations/${id}`)
     } catch (error) {
       console.error('Failed to delete destination:', error)
       throw new Error(getErrorMessage(error))
@@ -136,7 +138,7 @@ export class DestinationsService {
    */
   static async searchDestinations(query: string, limit: number = 10): Promise<Destination[]> {
     try {
-      const response = await adminApi.get('/api/destinations/search', {
+      const response = await apiClient.get('/api/destinations/search', {
         params: { query, limit }
       })
       return response.data
@@ -151,7 +153,7 @@ export class DestinationsService {
    */
   static async getDestinationActivities(destinationId: string): Promise<any> {
     try {
-      const response = await adminApi.get(`/api/destinations/${destinationId}/activities`)
+      const response = await apiClient.get(`/api/destinations/${destinationId}/activities`)
       return response.data
     } catch (error) {
       console.error('Failed to fetch destination activities:', error)
@@ -174,7 +176,7 @@ export class DestinationsService {
         difficulty_level: 'Moderate',
         best_time_to_visit: 'October to June',
         popular_activities: ['Trekking', 'Paragliding', 'River Rafting', 'Skiing', 'Temple Visits'],
-        average_cost_per_day: 2500,
+        package_price: 12500,
         is_active: true
       },
       {
@@ -187,7 +189,7 @@ export class DestinationsService {
         difficulty_level: 'Easy',
         best_time_to_visit: 'November to March',
         popular_activities: ['Beach Activities', 'Water Sports', 'Nightlife', 'Heritage Tours', 'Cruise'],
-        average_cost_per_day: 3000,
+        package_price: 15000,
         is_active: true
       },
       {
@@ -200,7 +202,7 @@ export class DestinationsService {
         difficulty_level: 'Easy',
         best_time_to_visit: 'September to March',
         popular_activities: ['Houseboat Cruise', 'Ayurvedic Spa', 'Bird Watching', 'Village Tours', 'Fishing'],
-        average_cost_per_day: 2800,
+        package_price: 14000,
         is_active: true
       },
       {
@@ -213,7 +215,7 @@ export class DestinationsService {
         difficulty_level: 'Challenging',
         best_time_to_visit: 'May to September',
         popular_activities: ['Motorcycle Tours', 'Trekking', 'Monastery Visits', 'Camping', 'Photography'],
-        average_cost_per_day: 3500,
+        package_price: 17500,
         is_active: true
       },
       {
@@ -226,7 +228,7 @@ export class DestinationsService {
         difficulty_level: 'Easy',
         best_time_to_visit: 'October to March',
         popular_activities: ['Palace Tours', 'Desert Safari', 'Cultural Shows', 'Camel Rides', 'Heritage Walks'],
-        average_cost_per_day: 2200,
+        package_price: 11000,
         is_active: true
       }
     ]
@@ -247,12 +249,12 @@ export class DestinationsService {
       }
       if (filters.min_cost) {
         filteredDestinations = filteredDestinations.filter(dest => 
-          (dest.average_cost_per_day || 0) >= filters.min_cost!
+          (dest.package_price || 0) >= filters.min_cost!
         )
       }
       if (filters.max_cost) {
         filteredDestinations = filteredDestinations.filter(dest => 
-          (dest.average_cost_per_day || 0) <= filters.max_cost!
+          (dest.package_price || 0) <= filters.max_cost!
         )
       }
       if (filters.is_active !== undefined) {
@@ -301,7 +303,7 @@ export class DestinationsService {
       popular_activities: destination.popular_activities || [],
       difficulty_level: destination.difficulty_level,
       best_time_to_visit: destination.best_time_to_visit,
-      average_cost_per_day: destination.average_cost_per_day
+      package_price: destination.package_price
     }
   }
 }

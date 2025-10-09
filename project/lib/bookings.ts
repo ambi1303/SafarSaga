@@ -1,4 +1,5 @@
 import { TokenManager } from './auth-api'
+import apiClient, { getErrorMessage } from './api-client'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 
@@ -81,90 +82,39 @@ export class BookingsService {
       }
     })
 
-    const response = await fetch(`${API_BASE_URL}/bookings?${params}`, {
-      headers: this.getAuthHeaders()
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to fetch bookings')
-    }
-
-    const data = await response.json()
-    return data.bookings
+    const response = await apiClient.get(`/api/bookings?${params}`)
+    return response.data.bookings || response.data
   }
 
   /**
    * Fetch a single booking by ID
    */
   static async getBooking(id: string): Promise<Booking> {
-    const response = await fetch(`${API_BASE_URL}/bookings/${id}`, {
-      headers: this.getAuthHeaders()
-    })
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        throw new Error('Booking not found')
-      }
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to fetch booking')
-    }
-
-    const data = await response.json()
-    return data.booking
+    const response = await apiClient.get(`/api/bookings/${id}`)
+    return response.data.booking || response.data
   }
 
   /**
    * Create a new booking
    */
   static async createBooking(bookingData: CreateBookingData): Promise<Booking> {
-    const response = await fetch(`${API_BASE_URL}/bookings`, {
-      method: 'POST',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(bookingData)
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to create booking')
-    }
-
-    const data = await response.json()
-    return data.booking
+    const response = await apiClient.post('/api/bookings', bookingData)
+    return response.data.booking || response.data
   }
 
   /**
    * Update a booking
    */
   static async updateBooking(id: string, updates: Partial<Booking>): Promise<Booking> {
-    const response = await fetch(`${API_BASE_URL}/bookings/${id}`, {
-      method: 'PUT',
-      headers: this.getAuthHeaders(),
-      body: JSON.stringify(updates)
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to update booking')
-    }
-
-    const data = await response.json()
-    return data.booking
+    const response = await apiClient.patch(`/api/bookings/${id}`, updates)
+    return response.data.booking || response.data
   }
 
   /**
    * Cancel a booking
    */
   static async cancelBooking(id: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/bookings/${id}`, {
-      method: 'DELETE',
-      headers: this.getAuthHeaders()
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to cancel booking')
-    }
+    await apiClient.patch(`/api/bookings/${id}`, { booking_status: 'cancelled' })
   }
 
   /**
@@ -193,17 +143,8 @@ export class BookingsService {
     totalRevenue: number
     pendingPayments: number
   }> {
-    const response = await fetch(`${API_BASE_URL}/bookings/stats`, {
-      headers: this.getAuthHeaders()
-    })
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Failed to fetch booking statistics')
-    }
-
-    const data = await response.json()
-    return data
+    const response = await apiClient.get('/api/bookings/admin/stats')
+    return response.data
   }
 }
 

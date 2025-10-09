@@ -90,6 +90,8 @@ export default function AdminBookingsPage() {
       key: 'id',
       label: 'Booking ID',
       sortable: true,
+      width: '140px',
+      minWidth: '140px',
       render: (booking) => (
         <span className="font-mono text-xs">{booking.id?.slice(0, 8) || 'N/A'}</span>
       ),
@@ -98,10 +100,12 @@ export default function AdminBookingsPage() {
       key: 'user_name',
       label: 'User',
       sortable: true,
+      width: '200px',
+      minWidth: '180px',
       render: (booking) => (
         <div>
-          <p className="font-medium">{booking.user_name || 'N/A'}</p>
-          <p className="text-xs text-gray-500">{booking.user_email}</p>
+          <p className="font-medium text-sm">{booking.user_name || 'Unknown User'}</p>
+          <p className="text-xs text-gray-500 truncate">{booking.user_email || 'No email'}</p>
         </div>
       ),
     },
@@ -109,46 +113,75 @@ export default function AdminBookingsPage() {
       key: 'destination_name',
       label: 'Destination',
       sortable: true,
+      width: '180px',
+      minWidth: '150px',
+      className: 'max-w-0',
+      render: (booking) => (
+        <span className="truncate block" title={booking.destination_name}>
+          {booking.destination_name || 'Unknown Destination'}
+        </span>
+      ),
     },
     {
       key: 'travel_date',
       label: 'Travel Date',
       sortable: true,
-      render: (booking) => formatDate(booking.travel_date),
+      width: '130px',
+      minWidth: '120px',
+      render: (booking) => (
+        <span className="text-sm">
+          {booking.travel_date ? formatDate(booking.travel_date) : 'Not set'}
+        </span>
+      ),
     },
     {
       key: 'seats',
       label: 'Seats',
       sortable: true,
+      width: '80px',
+      minWidth: '80px',
+      render: (booking) => (
+        <span className="font-medium">{booking.seats || 0}</span>
+      ),
     },
     {
       key: 'total_amount',
       label: 'Amount',
       sortable: true,
-      render: (booking) => formatCurrency(booking.total_amount),
+      width: '120px',
+      minWidth: '100px',
+      render: (booking) => (
+        <span className="font-medium">{formatCurrency(booking.total_amount || 0)}</span>
+      ),
     },
     {
       key: 'booking_status',
       label: 'Booking Status',
+      width: '120px',
+      minWidth: '120px',
       render: (booking) => (
-        <StatusBadge status={booking.booking_status} type="booking" />
+        <StatusBadge status={booking.booking_status || 'pending'} type="booking" />
       ),
     },
     {
       key: 'payment_status',
       label: 'Payment Status',
+      width: '120px',
+      minWidth: '120px',
       render: (booking) => (
-        <StatusBadge status={booking.payment_status} type="payment" />
+        <StatusBadge status={booking.payment_status || 'unpaid'} type="payment" />
       ),
     },
     {
       key: 'actions',
       label: 'Actions',
+      width: '100px',
+      minWidth: '100px',
       render: (booking) => (
         <div className="flex space-x-2">
           <Link href={`/admin/bookings/${booking.id}`}>
-            <Button size="sm" variant="outline">
-              <Eye className="h-4 w-4" />
+            <Button size="sm" variant="outline" className="text-xs px-2 py-1">
+              <Eye className="h-3 w-3" />
             </Button>
           </Link>
         </div>

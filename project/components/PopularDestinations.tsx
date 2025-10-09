@@ -39,16 +39,19 @@ const PopularDestinations = () => {
 
       if (response.items && response.items.length > 0) {
         // Convert backend destinations to UI format
-        const uiDestinations = response.items.map((dest: Destination) => ({
-          id: dest.id,
-          name: dest.name,
-          location: dest.state || 'India',
-          description: dest.description || 'Amazing travel experience awaits you',
-          image: dest.featured_image_url || DEFAULT_PLACEHOLDER,
-          rating: 4.8, // Mock rating - can be added to backend later
-          price: `From ₹${(dest.average_cost_per_day || 5999).toLocaleString()}`,
-          duration: '3N/4D' // Default duration - can be added to backend later
-        }));
+        const uiDestinations = response.items.map((dest: Destination) => {
+          console.log('Destination data:', dest); // Debug log to see actual data
+          return {
+            id: dest.id,
+            name: dest.name,
+            location: dest.state || 'India',
+            description: dest.description || 'Amazing travel experience awaits you',
+            image: dest.featured_image_url || DEFAULT_PLACEHOLDER,
+            rating: 4.8, // Mock rating - can be added to backend later
+            price: `₹${(dest.package_price || '0').toLocaleString('en-IN')}`,
+            duration: '3N/4D' // Default duration - can be added to backend later
+          };
+        });
         setDestinations(uiDestinations);
       }
     } catch (error) {

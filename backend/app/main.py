@@ -274,7 +274,7 @@ async def general_exception_handler(request, exc):
     )
 
 # Include routers
-from app.routers import auth, events, bookings, destinations, admin_users, gallery_albums
+from app.routers import auth, events, bookings, destinations, admin_users, gallery_albums, settings
 from app.middleware.auth import add_security_headers, log_requests
 from app.services.supabase_service import SupabaseService
 
@@ -301,6 +301,9 @@ app.include_router(destinations.router, prefix="/api/destinations", tags=["Desti
 
 # Include admin users routes
 app.include_router(admin_users.router, prefix="/api/users", tags=["Admin"])
+
+# Include settings routes
+app.include_router(settings.router, tags=["Settings"])
 
 # Initialize services for health checks
 supabase_service = SupabaseService()

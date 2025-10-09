@@ -98,6 +98,30 @@ export class UsersAdminService {
   }
 
   /**
+   * Promote user to admin
+   */
+  static async promoteToAdmin(userId: string): Promise<User> {
+    try {
+      const response = await adminApi.post(`/api/users/${userId}/promote-admin`)
+      return response.data
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
+  }
+
+  /**
+   * Revoke admin status
+   */
+  static async revokeAdminStatus(userId: string): Promise<User> {
+    try {
+      const response = await adminApi.post(`/api/users/${userId}/revoke-admin`)
+      return response.data
+    } catch (error) {
+      throw new Error(getErrorMessage(error))
+    }
+  }
+
+  /**
    * Delete user
    */
   static async deleteUser(userId: string): Promise<void> {
@@ -108,3 +132,7 @@ export class UsersAdminService {
     }
   }
 }
+
+// Export singleton instance
+export const usersAdminService = UsersAdminService
+export default UsersAdminService

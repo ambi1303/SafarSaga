@@ -48,9 +48,13 @@ export class PaymentsAdminService {
   /**
    * Confirm payment for a booking
    */
-  static async confirmPayment(bookingId: string): Promise<void> {
+  static async confirmPayment(bookingId: string, transactionId?: string, paymentMethod?: string): Promise<void> {
     try {
-      await adminApi.post(`/api/bookings/${bookingId}/confirm-payment`)
+      const payload = {
+        transaction_id: transactionId || `ADMIN_APPROVED_${Date.now()}`,
+        payment_method: paymentMethod || "Admin Approval"
+      }
+      await adminApi.post(`/api/bookings/${bookingId}/confirm-payment`, payload)
     } catch (error) {
       throw new Error(getErrorMessage(error))
     }

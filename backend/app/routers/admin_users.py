@@ -15,7 +15,7 @@ from datetime import datetime
 from app.middleware.auth import get_current_user, get_admin_user
 from app.services.supabase_service import SupabaseService
 from app.models import User, PaginatedResponse
-from app.exceptions import NotFoundException, AuthorizationException, DatabaseException
+from app.exceptions import NotFoundException, AuthorizationException, DatabaseException, ConflictException
 
 router = APIRouter()
 supabase_service = SupabaseService()
@@ -245,6 +245,146 @@ async def deactivate_user(
         raise
     except Exception as e:
         raise DatabaseException(f"Failed to deactivate user: {str(e)}")
+
+
+@router.post(
+    "/{user_id}/promote-admin",
+    response_model=User,
+    tags=["Admin"],
+    summary="Promote User to Admin",
+    description="Promote an existing user to admin status (admin only)"
+)
+async def promote_to_admin(
+    user_id: str,
+    current_user: User = Depends(get_admin_user)
+):
+    """
+    Promote an existing user to admin status.
+    
+    **Admin only endpoint**
+    
+    Parameters:
+    - user_id: The ID of the user to promote to admin
+    
+    Returns:
+    - Updated user information
+    """
+    try:
+        # Get the initialized client
+        client = supabase_service._get_client()
+        
+        # Check if user exists
+        user_response = client.from_("users").select("*").eq("id", user_id).execute()
+        
+        if not user_response.data:
+            raise NotFoundException(f"User with ID {user_id} not found")
+        
+        user = user_response.data[0]
+        
+        # Check if user is already admin
+        if user.get("is_admin"):
+            raise ConflictException("User is already an admin")
+        
+        # Prevent promoting inactive users
+        if not user.get("is_active"):
+            raise AuthorizationException("Cannot promote inactive users to admin. Please activate the user first.")
+        
+        # Promote user to admin and record who promoted them
+        update_response = client.from_("users").update({
+            "is_admin": True,
+            "promoted_by": current_user.id
+        }).eq("id", user_id).execute()
+        
+        if not update_response.data:
+            raise DatabaseException("Failed to update user admin status")
+        
+        return update_response.data[0]
+        
+    except (NotFoundException, ConflictException, AuthorizationException):
+        raise
+    except Exception as e:
+        raise DatabaseException(f"Failed to promote user to admin: {str(e)}")
+
+
+@router.post(
+    "/{user_id}/revoke-admin",
+    response_model=User,
+    tags=["Admin"],
+    summary="Revoke Admin Status",
+    description="Revoke admin status from a user (admin only)"
+)
+async def revoke_admin_status(
+    user_id: str,
+    current_user: User = Depends(get_admin_user)
+):
+    """
+    Revoke admin status from a user.
+    
+    **Admin only endpoint**
+    
+    Parameters:
+    - user_id: The ID of the user to revoke admin status from
+    
+    Returns:
+    - Updated user information
+    """
+    try:
+        # Get the initialized client
+        client = supabase_service._get_client()
+        
+        # Check if user exists
+        user_response = client.from_("users").select("*").eq("id", user_id).execute()
+        
+        if not user_response.data:
+            raise NotFoundException(f"User with ID {user_id} not found")
+        
+        user = user_response.data[0]
+        
+        # Check if user is admin
+        if not user.get("is_admin"):
+            raise ConflictException("User is not an admin")
+        
+        # Prevent self-demotion
+        if user_id == current_user.id:
+            raise AuthorizationException("Cannot revoke your own admin status")
+        
+        # Check admin hierarchy - only allow revoking if:
+        # 1. Current user promoted this admin (promoted_by = current_user.id)
+        # 2. Current user is a root admin (promoted_by = NULL) and target is not a root admin
+        promoted_by = user.get("promoted_by")
+        current_user_promoted_by = None
+        
+        # Get current user's promoted_by status
+        current_user_response = client.from_("users").select("promoted_by").eq("id", current_user.id).execute()
+        if current_user_response.data:
+            current_user_promoted_by = current_user_response.data[0].get("promoted_by")
+        
+        # Authorization logic:
+        # - Root admins (promoted_by = NULL) can revoke any non-root admin
+        # - Non-root admins can only revoke admins they promoted
+        # - Nobody can revoke root admins except other root admins
+        if promoted_by is None:  # Target is root admin
+            if current_user_promoted_by is not None:  # Current user is not root admin
+                raise AuthorizationException("Only root administrators can revoke root admin status")
+        elif promoted_by != current_user.id:  # Target was promoted by someone else
+            if current_user_promoted_by is not None:  # Current user is not root admin
+                raise AuthorizationException("You can only revoke admin status from users you promoted")
+        
+        # Revoke admin status and clear promoted_by
+        update_response = client.from_("users").update({
+            "is_admin": False,
+            "promoted_by": None
+        }).eq("id", user_id).execute()
+        
+        if not update_response.data:
+            raise DatabaseException("Failed to update user admin status")
+        
+        return update_response.data[0]
+        
+    except (NotFoundException, ConflictException, AuthorizationException):
+        raise
+    except Exception as e:
+        raise DatabaseException(f"Failed to revoke admin status: {str(e)}")
 
 
 @router.delete(

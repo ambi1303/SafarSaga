@@ -429,7 +429,7 @@ async def get_destination_activities(
             "popular_activities": destination.popular_activities or [],
             "difficulty_level": destination.difficulty_level,
             "best_time_to_visit": destination.best_time_to_visit,
-            "average_cost_per_day": destination.average_cost_per_day
+            "package_price": destination.package_price
         }
         
     except NotFoundException:

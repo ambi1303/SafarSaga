@@ -132,10 +132,13 @@ const SimpleDynamicGallery: React.FC<SimpleDynamicGalleryProps> = ({
     } else {
       setState(prev => ({
         ...prev,
-        availableTags: extractUniqueTags(initialImages)
+        images: initialImages,
+        availableTags: extractUniqueTags(initialImages),
+        loading: false,
+        hasMore: false
       }));
     }
-  }, []);
+  }, [initialImages]);
 
   // Handle search
   const handleSearch = useCallback((query: string) => {
