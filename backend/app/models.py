@@ -2,7 +2,7 @@
 SafarSaga Data Models
 """
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, field_validator
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from decimal import Decimal
@@ -23,6 +23,28 @@ class DifficultyLevel(str, Enum):
     EASY = "Easy"
     MODERATE = "Moderate"
     CHALLENGING = "Challenging"
+
+
+class BookingBusinessRules:
+    """A container for booking-related business logic."""
+    @staticmethod
+    def calculate_booking_amount(
+        cost_per_day: Optional[Decimal],
+        seats: int,
+        duration_days: int = 1
+    ) -> Decimal:
+        """Calculates the total booking amount."""
+        if cost_per_day is None or cost_per_day < 0:
+            cost_per_day = Decimal('0')
+        
+        if seats < 1:
+            seats = 1
+        
+        if duration_days < 1:
+            duration_days = 1
+        
+        return (cost_per_day * Decimal(seats) * Decimal(duration_days))
+
 
 # Base Models
 class ContactInfo(BaseModel):
@@ -244,40 +266,81 @@ class EventUpdate(BaseModel):
     price: Optional[Decimal] = Field(None, ge=0)
     is_active: Optional[bool] = None
 
-class GalleryImage(BaseModel):
-    """Gallery image model"""
+
+# New Album-based Gallery System Models
+class GalleryAlbum(BaseModel):
+    """Gallery album model"""
     id: str
     title: str
     description: Optional[str] = None
-    image_url: str
-    thumbnail_url: Optional[str] = None
-    cloudinary_public_id: str
-    category: Optional[str] = None
-    is_featured: bool = False
+    destination_id: Optional[str] = None
     created_at: str
+    updated_at: str
+    
+    # Enriched fields
+    destination_name: Optional[str] = None
+    image_count: Optional[int] = 0
+    cover_image_url: Optional[str] = None  # First image in the album
+    
+    class Config:
+        extra = "ignore"
 
-class GalleryImageCreate(BaseModel):
-    """Model for creating gallery images"""
-    title: str = Field(..., min_length=1, max_length=200)
-    description: Optional[str] = Field(None, max_length=1000)
-    image_url: str = Field(..., description="URL of the uploaded image")
-    thumbnail_url: Optional[str] = None
-    cloudinary_public_id: str = Field(..., description="Cloudinary public ID")
-    category: Optional[str] = Field(None, max_length=100)
-    is_featured: bool = False
+class GalleryAlbumCreate(BaseModel):
+    """Model for creating gallery albums"""
+    title: str = Field(..., min_length=1, max_length=200, description="Album title")
+    description: Optional[str] = Field(None, max_length=1000, description="Album description")
+    destination_id: Optional[str] = Field(None, description="Associated destination ID")
 
-class GalleryImageUpdate(BaseModel):
-    """Model for updating gallery images"""
+    @field_validator("destination_id", mode='before')
+    @classmethod
+    def empty_str_to_none(cls, v):
+        """Convert empty string to None for UUID validation"""
+        if v == "":
+            return None
+        return v
+
+class GalleryAlbumUpdate(BaseModel):
+    """Model for updating gallery albums"""
     title: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = Field(None, max_length=1000)
-    category: Optional[str] = Field(None, max_length=100)
-    is_featured: Optional[bool] = None
+    destination_id: Optional[str] = None
 
-class GalleryFilters(BaseModel):
-    """Gallery filtering options"""
-    category: Optional[str] = None
-    is_featured: Optional[bool] = None
-    search: Optional[str] = None
+    @field_validator("destination_id", mode='before')
+    @classmethod
+    def empty_str_to_none(cls, v):
+        """Convert empty string to None for UUID validation"""
+        if v == "":
+            return None
+        return v
+
+class GalleryAlbumImage(BaseModel):
+    """Gallery image within an album"""
+    id: str
+    album_id: str
+    image_url: str
+    caption: Optional[str] = None
+    display_order: int
+    created_at: str
+    updated_at: str
+    
+    class Config:
+        extra = "ignore"
+
+class GalleryAlbumImageCreate(BaseModel):
+    """Model for creating gallery images in an album"""
+    image_url: str = Field(..., max_length=2000, description="Direct image URL from storage")
+    caption: Optional[str] = Field(None, max_length=500, description="Image caption")
+    display_order: Optional[int] = Field(0, ge=0, description="Display order (0-based)")
+
+class GalleryAlbumImageUpdate(BaseModel):
+    """Model for updating gallery images"""
+    image_url: Optional[str] = Field(None, max_length=2000)
+    caption: Optional[str] = Field(None, max_length=500)
+    display_order: Optional[int] = Field(None, ge=0)
+
+class GalleryAlbumWithImages(GalleryAlbum):
+    """Gallery album with all its images"""
+    images: List[GalleryAlbumImage] = []
 
 class EventFilters(BaseModel):
     """Event filtering options"""
@@ -317,42 +380,3 @@ class ApiResponse(BaseModel):
     message: str
     success: bool = True
     data: Optional[Any] = None
-
-# Business Rules
-class BookingBusinessRules:
-    """Business rules for booking operations"""
-    
-    @staticmethod
-    def calculate_booking_amount(destination_cost: Optional[Decimal], seats: int, duration_days: int = 3) -> Decimal:
-        """Calculate total booking amount for destination"""
-        # 🔒 SAFETY: Ensure seats is properly converted
-        if isinstance(seats, str):
-            try:
-                seats = int(seats.strip())
-            except (ValueError, AttributeError):
-                raise ValueError(f"Invalid seat count: '{seats}' is not a valid number")
-        elif isinstance(seats, float):
-            if seats.is_integer():
-                seats = int(seats)
-            else:
-                raise ValueError(f"Seat count must be a whole number: {seats}")
-        
-        if not destination_cost:
-            # Default price if not set
-            base_price = Decimal('2000.00')
-        else:
-            base_price = destination_cost
-        
-        # Calculate total: base_price * seats * duration
-        total_amount = base_price * Decimal(str(seats)) * Decimal(str(duration_days))
-        
-        return total_amount
-    
-    @staticmethod
-    def calculate_refund_amount(total_amount: Decimal, travel_date: Optional[datetime] = None) -> Decimal:
-        """Calculate refund amount based on cancellation policy"""
-        if not travel_date:
-            return total_amount * Decimal('0.9')  # 90% refund if no travel date
-        
-        # Add more sophisticated refund logic here
-        return total_amount * Decimal('0.8')  # 80% refund default

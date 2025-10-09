@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import DynamicGallery from '@/components/DynamicGallery';
+import AlbumGallery from '@/components/AlbumGallery';
 
 export const metadata: Metadata = {
   title: 'Travel Photo Gallery - SafarSaga Adventures | India Travel Photos',
@@ -41,22 +41,10 @@ export default function GalleryPage() {
         </div>
       </section>
 
-      {/* Dynamic Gallery */}
+      {/* Album Gallery */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <DynamicGallery
-            itemsPerPage={15}
-            enableSearch={true}
-            enableFilters={true}
-            enableHoverEffects={true}
-            enableLightbox={true}
-            gridColumns={{
-              mobile: 1,
-              tablet: 2,
-              desktop: 3
-            }}
-            className="max-w-7xl mx-auto"
-          />
+          <AlbumGallery className="max-w-7xl mx-auto" />
         </div>
       </section>
       

@@ -9,7 +9,9 @@ from datetime import datetime
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
-from app.models import User, Event, Booking, GalleryImage, Destination
+import uuid
+import mimetypes
+from app.models import User, Event, Booking, Destination,GalleryAlbum,GalleryAlbumImage
 from app.exceptions import (
     DatabaseException, 
     NotFoundException, 
@@ -48,6 +50,67 @@ class SupabaseService:
         
         return self.client
     
+    # ==================== STORAGE METHODS ====================
+    
+    async def generate_signed_upload_url(self, file_name: str, content_type: str = None) -> dict:
+        """Generate a signed URL for uploading files to Supabase Storage"""
+        try:
+            # Generate unique filename to avoid conflicts
+            file_extension = os.path.splitext(file_name)[1]
+            unique_filename = f"{uuid.uuid4()}{file_extension}"
+            
+            # Determine content type if not provided
+            if not content_type:
+                content_type, _ = mimetypes.guess_type(file_name)
+                if not content_type:
+                    content_type = 'application/octet-stream'
+            
+            def _generate_url():
+                # Create signed URL for upload (valid for 1 hour)
+                response = self._get_client().storage.from_("gallery_images").create_signed_upload_url(unique_filename)
+                return response
+            
+            result = await self._run_sync(_generate_url)
+            
+            if not result:
+                raise DatabaseException("Failed to generate signed upload URL")
+            
+            return {
+                "upload_url": result.get("signedURL"),
+                "file_path": unique_filename,
+                "public_url": f"{self.supabase_url}/storage/v1/object/public/gallery_images/{unique_filename}"
+            }
+            
+        except Exception as e:
+            raise handle_supabase_error(e, "generate signed upload URL")
+    
+    async def get_public_url(self, file_path: str) -> str:
+        """Get public URL for a file in storage"""
+        try:
+            def _get_url():
+                response = self._get_client().storage.from_("gallery_images").get_public_url(file_path)
+                return response
+            
+            result = await self._run_sync(_get_url)
+            return result
+            
+        except Exception as e:
+            raise handle_supabase_error(e, "get public URL")
+    
+    async def delete_storage_file(self, file_path: str) -> bool:
+        """Delete a file from storage"""
+        try:
+            def _delete_file():
+                response = self._get_client().storage.from_("gallery_images").remove([file_path])
+                return response
+            
+            result = await self._run_sync(_delete_file)
+            return bool(result)
+            
+        except Exception as e:
+            print(f"Warning: Failed to delete storage file {file_path}: {str(e)}")
+            return False  # Don't fail the main operation if storage cleanup fails
+    
     async def _run_sync(self, func, *args, **kwargs):
         """
         Wrapper for compatibility — no ThreadPoolExecutor to avoid async TaskGroup errors.
@@ -60,360 +123,6 @@ class SupabaseService:
             return result
         except Exception as e:
             raise e
-    
-    def _validate_and_convert_booking_data(self, booking_data: dict) -> dict:
-        """
-        Comprehensive validation and type conversion for booking data.
-        This is the final defensive layer before database operations.
-        """
-        from app.exceptions import ValidationException, DatabaseException
-        
-        print(f"DEBUG - Service layer validation - Input data types:")
-        for key, value in booking_data.items():
-            print(f"  - {key}: {value} (type: {type(value)})")
-        
-        # Create a copy to avoid modifying the original
-        validated_data = booking_data.copy()
-        
-        # Validate and convert seats
-        if 'seats' in validated_data:
-            try:
-                seats_value = validated_data['seats']
-                print(f"DEBUG - Service layer seats validation: {seats_value} (type: {type(seats_value)})")
-                
-                if isinstance(seats_value, str):
-                    # Handle string conversion with comprehensive validation
-                    seats_value = seats_value.strip()
-                    
-                    if not seats_value:
-                        raise ValidationException("Seat count cannot be empty", field="seats", value=booking_data['seats'])
-                    
-                    if not seats_value.isdigit():
-                        # Check for common invalid patterns
-                        if '.' in seats_value:
-                            raise ValidationException(
-                                f"Seat count must be a whole number, not a decimal: '{seats_value}'",
-                                field="seats", 
-                                value=seats_value
-                            )
-                        elif seats_value.lower() in ['none', 'null', 'undefined']:
-                            raise ValidationException(
-                                "Seat count is required and cannot be null",
-                                field="seats", 
-                                value=seats_value
-                            )
-                        else:
-                            raise ValidationException(
-                                f"Invalid seat count: '{seats_value}' is not a valid number",
-                                field="seats", 
-                                value=seats_value
-                            )
-                    
-                    validated_data['seats'] = int(seats_value)
-                    
-                elif isinstance(seats_value, float):
-                    # Handle float conversion
-                    if not seats_value.is_integer():
-                        raise ValidationException(
-                            f"Seat count must be a whole number, not a decimal: {seats_value}",
-                            field="seats", 
-                            value=seats_value
-                        )
-                    validated_data['seats'] = int(seats_value)
-                    
-                elif isinstance(seats_value, int):
-                    # Already an integer, validate range
-                    validated_data['seats'] = seats_value
-                    
-                elif seats_value is None:
-                    raise ValidationException(
-                        "Seat count is required and cannot be null",
-                        field="seats", 
-                        value=None
-                    )
-                    
-                else:
-                    # Unsupported type
-                    raise ValidationException(
-                        f"Invalid seat count data type: {type(seats_value).__name__}. Expected a number.",
-                        field="seats", 
-                        value=str(seats_value)
-                    )
-                
-                # Validate seats range
-                seats_int = validated_data['seats']
-                if seats_int < 1:
-                    raise ValidationException(
-                        f"Number of seats must be at least 1, got: {seats_int}",
-                        field="seats", 
-                        value=seats_int
-                    )
-                elif seats_int > 10:
-                    raise ValidationException(
-                        f"Number of seats cannot exceed 10, got: {seats_int}",
-                        field="seats", 
-                        value=seats_int
-                    )
-                
-                print(f"DEBUG - Service layer seats converted: {validated_data['seats']} (type: {type(validated_data['seats'])})")
-                
-            except ValidationException:
-                # Re-raise ValidationException as-is
-                raise
-            except (ValueError, TypeError) as e:
-                raise ValidationException(
-                    f"Failed to process seat count: {str(e)}",
-                    field="seats", 
-                    value=str(booking_data['seats'])
-                )
-        
-        # Validate and convert total_amount
-        if 'total_amount' in validated_data:
-            try:
-                amount_value = validated_data['total_amount']
-                print(f"DEBUG - Service layer total_amount validation: {amount_value} (type: {type(amount_value)})")
-                
-                if isinstance(amount_value, str):
-                    # Handle string conversion
-                    amount_value = amount_value.strip()
-                    
-                    if not amount_value:
-                        raise ValidationException(
-                            "Total amount cannot be empty",
-                            field="total_amount", 
-                            value=booking_data['total_amount']
-                        )
-                    
-                    try:
-                        validated_data['total_amount'] = float(amount_value)
-                    except ValueError:
-                        raise ValidationException(
-                            f"Invalid total amount: '{amount_value}' is not a valid number",
-                            field="total_amount", 
-                            value=amount_value
-                        )
-                        
-                elif isinstance(amount_value, (int, float)):
-                    validated_data['total_amount'] = float(amount_value)
-                    
-                elif amount_value is None:
-                    raise ValidationException(
-                        "Total amount is required and cannot be null",
-                        field="total_amount", 
-                        value=None
-                    )
-                    
-                else:
-                    raise ValidationException(
-                        f"Invalid total amount data type: {type(amount_value).__name__}. Expected a number.",
-                        field="total_amount", 
-                        value=str(amount_value)
-                    )
-                
-                # Validate amount range
-                amount_float = validated_data['total_amount']
-                if amount_float < 0:
-                    raise ValidationException(
-                        f"Total amount cannot be negative: {amount_float}",
-                        field="total_amount", 
-                        value=amount_float
-                    )
-                elif amount_float == 0:
-                    raise ValidationException(
-                        "Total amount cannot be zero. Please check pricing calculation.",
-                        field="total_amount", 
-                        value=amount_float
-                    )
-                
-                print(f"DEBUG - Service layer total_amount converted: {validated_data['total_amount']} (type: {type(validated_data['total_amount'])})")
-                
-            except ValidationException:
-                # Re-raise ValidationException as-is
-                raise
-            except (ValueError, TypeError) as e:
-                raise ValidationException(
-                    f"Failed to process total amount: {str(e)}",
-                    field="total_amount", 
-                    value=str(booking_data['total_amount'])
-                )
-        
-        # Validate destination_id
-        if 'destination_id' in validated_data:
-            dest_id = validated_data['destination_id']
-            
-            if not dest_id:
-                raise ValidationException(
-                    "Destination ID is required",
-                    field="destination_id", 
-                    value=dest_id
-                )
-            
-            if not isinstance(dest_id, str):
-                raise ValidationException(
-                    f"Destination ID must be a string, got {type(dest_id).__name__}",
-                    field="destination_id", 
-                    value=str(dest_id)
-                )
-            
-            dest_id = dest_id.strip()
-            if not dest_id:
-                raise ValidationException(
-                    "Destination ID cannot be empty",
-                    field="destination_id", 
-                    value=validated_data['destination_id']
-                )
-            
-            if len(dest_id) < 8:
-                raise ValidationException(
-                    f"Destination ID must be at least 8 characters long, got {len(dest_id)}",
-                    field="destination_id", 
-                    value=dest_id
-                )
-            
-            validated_data['destination_id'] = dest_id
-        
-        # Validate user_id
-        if 'user_id' in validated_data:
-            user_id = validated_data['user_id']
-            
-            if not user_id:
-                raise ValidationException(
-                    "User ID is required",
-                    field="user_id", 
-                    value=user_id
-                )
-            
-            if not isinstance(user_id, str):
-                raise ValidationException(
-                    f"User ID must be a string, got {type(user_id).__name__}",
-                    field="user_id", 
-                    value=str(user_id)
-                )
-            
-            user_id = user_id.strip()
-            if not user_id:
-                raise ValidationException(
-                    "User ID cannot be empty",
-                    field="user_id", 
-                    value=validated_data['user_id']
-                )
-            
-            validated_data['user_id'] = user_id
-        
-        # Validate contact_info if present
-        if 'contact_info' in validated_data and validated_data['contact_info']:
-            contact_info = validated_data['contact_info']
-            
-            if isinstance(contact_info, dict):
-                # Validate phone number in contact_info
-                if 'phone' in contact_info:
-                    phone = contact_info['phone']
-                    
-                    if not phone or not isinstance(phone, str):
-                        raise ValidationException(
-                            "Phone number is required in contact info",
-                            field="contact_info.phone", 
-                            value=phone
-                        )
-                    
-                    phone = phone.strip()
-                    if not phone:
-                        raise ValidationException(
-                            "Phone number cannot be empty",
-                            field="contact_info.phone", 
-                            value=contact_info['phone']
-                        )
-                    
-                    # Basic phone validation (digits, spaces, hyphens, parentheses, plus)
-                    phone_digits = phone.replace('+', '').replace('-', '').replace(' ', '').replace('(', '').replace(')', '')
-                    if not phone_digits.isdigit():
-                        raise ValidationException(
-                            "Phone number must contain only digits, spaces, hyphens, parentheses, and plus sign",
-                            field="contact_info.phone", 
-                            value=phone
-                        )
-                    
-                    if len(phone_digits) < 10 or len(phone_digits) > 15:
-                        raise ValidationException(
-                            f"Phone number must be between 10 and 15 digits, got {len(phone_digits)} digits",
-                            field="contact_info.phone", 
-                            value=phone
-                        )
-        
-        # Validate and convert travel_date
-        if "travel_date" in validated_data and validated_data["travel_date"]:
-            try:
-                travel_date_value = validated_data["travel_date"]
-                print(f"DEBUG - Service layer travel_date validation: {travel_date_value} (type: {type(travel_date_value)})")
-                
-                if isinstance(travel_date_value, str):
-                    # Normalize ISO 8601 format (accepts both date-only and datetime strings)
-                    if "T" in travel_date_value:
-                        parsed_date = datetime.fromisoformat(travel_date_value.replace("Z", "+00:00"))
-                    else:
-                        parsed_date = datetime.strptime(travel_date_value, "%Y-%m-%d")
-                    
-                    # Supabase column is timestamptz → keep full ISO timestamp
-                    validated_data["travel_date"] = parsed_date.isoformat()
-                elif isinstance(travel_date_value, datetime):
-                    validated_data["travel_date"] = travel_date_value.isoformat()
-                else:
-                    raise ValidationException(
-                        f"Invalid travel_date type: {type(travel_date_value).__name__}",
-                        field="travel_date",
-                        value=str(travel_date_value)
-                    )
-                
-                print(f"DEBUG - Service layer travel_date converted: {validated_data['travel_date']} (type: {type(validated_data['travel_date'])})")
-                
-            except ValidationException:
-                # Re-raise ValidationException as-is
-                raise
-            except Exception as e:
-                raise ValidationException(
-                    f"Invalid travel_date format: {e}", 
-                    field="travel_date", 
-                    value=str(validated_data["travel_date"])
-                )
-        
-        print(f"DEBUG - Service layer validation complete - Output data types:")
-        for key, value in validated_data.items():
-            print(f"  - {key}: {value} (type: {type(value)})")
-        
-        return validated_data
-    
-    def _safe_convert_booking_data(self, booking_data: dict) -> dict:
-        """
-        Safely convert booking data types for Pydantic model creation.
-        This is used when we get data back from the database that might have type issues.
-        """
-        if not booking_data:
-            return booking_data
-        
-        # Create a copy to avoid modifying the original
-        safe_data = booking_data.copy()
-        
-        # Safely convert seats
-        if 'seats' in safe_data and isinstance(safe_data['seats'], str):
-            try:
-                if safe_data['seats'].strip().isdigit():
-                    safe_data['seats'] = int(safe_data['seats'])
-                else:
-                    print(f"Warning: Invalid seats value from database: '{safe_data['seats']}'")
-                    safe_data['seats'] = 1  # Default fallback
-            except (ValueError, AttributeError):
-                print(f"Warning: Could not convert seats from database: {safe_data['seats']}")
-                safe_data['seats'] = 1  # Default fallback
-        
-        # Safely convert total_amount
-        if 'total_amount' in safe_data and isinstance(safe_data['total_amount'], str):
-            try:
-                safe_data['total_amount'] = float(safe_data['total_amount'])
-            except (ValueError, AttributeError):
-                print(f"Warning: Could not convert total_amount from database: {safe_data['total_amount']}")
-                safe_data['total_amount'] = 0.0  # Default fallback
-        
-        return safe_data
     
     # User operations
     async def get_user_by_id(self, user_id: str) -> Optional[User]:
@@ -990,118 +699,6 @@ class SupabaseService:
             raise handle_supabase_error(e, "update booking")
     
     # Gallery operations
-    async def get_gallery_images(self, filters: dict = None, limit: int = 12, offset: int = 0) -> tuple[List[GalleryImage], int]:
-        """Get gallery images with filtering and pagination"""
-        try:
-            def _get_images():
-                query = self._get_client().table("gallery_images").select("""
-                    *,
-                    event:events(id, name, destination),
-                    uploader:users(id, full_name, email)
-                """)
-                
-                # Apply filters
-                if filters:
-                    if filters.get("event_id"):
-                        query = query.eq("event_id", filters["event_id"])
-                    
-                    if filters.get("is_featured") is not None:
-                        query = query.eq("is_featured", filters["is_featured"])
-                    
-                    if filters.get("tags"):
-                        # Filter by tags (PostgreSQL array contains)
-                        for tag in filters["tags"]:
-                            query = query.contains("tags", [tag])
-                
-                # Add pagination and ordering
-                query = query.order("uploaded_at", desc=True).range(offset, offset + limit - 1)
-                
-                response = query.execute()
-                return response.data if response.data else []
-            
-            images_data = await self._run_sync(_get_images)
-            
-            # Convert to GalleryImage objects
-            images = [GalleryImage(**image) for image in images_data]
-            
-            # Get total count (simplified)
-            total = len(images_data)
-            
-            return images, total
-            
-        except Exception as e:
-            raise handle_supabase_error(e, "get gallery images")
-    
-    async def create_gallery_image(self, image_data: dict) -> GalleryImage:
-        """Create new gallery image"""
-        try:
-            def _create_image():
-                response = self._get_client().table("gallery_images").insert(image_data).execute()
-                return response.data[0] if response.data else None
-            
-            created_image = await self._run_sync(_create_image)
-            
-            if not created_image:
-                raise DatabaseException("Failed to create gallery image")
-            
-            return GalleryImage(**created_image)
-            
-        except Exception as e:
-            raise handle_supabase_error(e, "create gallery image")
-    
-    async def get_gallery_image_by_id(self, image_id: str) -> Optional[GalleryImage]:
-        """Get gallery image by ID"""
-        try:
-            def _get_image():
-                response = self._get_client().table("gallery_images").select("""
-                    *,
-                    event:events(id, name, destination),
-                    uploader:users(id, full_name, email)
-                """).eq("id", image_id).maybe_single().execute()
-                return response.data if response and response.data else None
-            
-            image_data = await self._run_sync(_get_image)
-            
-            if not image_data:
-                return None
-            
-            return GalleryImage(**image_data)
-            
-        except Exception as e:
-            error_str = str(e).lower()
-            if any(phrase in error_str for phrase in ["no rows found", "not found", "pgrst116", "nonetype"]):
-                return None
-            raise handle_supabase_error(e, "get gallery image by ID")
-    
-    async def update_gallery_image(self, image_id: str, update_data: dict) -> GalleryImage:
-        """Update gallery image"""
-        try:
-            def _update_image():
-                response = self._get_client().table("gallery_images").update(update_data).eq("id", image_id).execute()
-                return response.data[0] if response.data else None
-            
-            updated_image = await self._run_sync(_update_image)
-            
-            if not updated_image:
-                raise NotFoundException("Gallery Image", image_id)
-            
-            return GalleryImage(**updated_image)
-            
-        except Exception as e:
-            raise handle_supabase_error(e, "update gallery image")
-    
-    async def delete_gallery_image(self, image_id: str) -> bool:
-        """Delete gallery image"""
-        try:
-            def _delete_image():
-                response = self._get_client().table("gallery_images").delete().eq("id", image_id).execute()
-                return len(response.data) > 0 if response.data else False
-            
-            deleted = await self._run_sync(_delete_image)
-            return deleted
-            
-        except Exception as e:
-            raise handle_supabase_error(e, "delete gallery image")
 
     async def get_destinations(self, filters: dict = None, limit: int = 20, offset: int = 0) -> tuple[List[Destination], int]:
         """Get destinations with filtering and pagination"""
@@ -1318,3 +915,286 @@ class SupabaseService:
                 "error": str(e),
                 "timestamp": datetime.utcnow().isoformat()
             }
+    
+    # Gallery Album operations
+    async def create_gallery_album(self, album_data: dict) -> dict:
+        """Create new gallery album"""
+        try:
+            print(f"DEBUG: Service - Creating album with data: {album_data}")
+            
+            # Add timestamps
+            album_data["created_at"] = datetime.utcnow().isoformat()
+            album_data["updated_at"] = datetime.utcnow().isoformat()
+            
+            print(f"DEBUG: Service - Album data with timestamps: {album_data}")
+            
+            def _create_album():
+                print("DEBUG: Service - Executing database insert")
+                response = self._get_client().table("gallery_albums").insert(album_data).execute()
+                print(f"DEBUG: Service - Database response: {response}")
+                print(f"DEBUG: Service - Response data: {response.data if hasattr(response, 'data') else 'No data attr'}")
+                return response.data[0] if response.data else None
+            
+            created_album = await self._run_sync(_create_album)
+            print(f"DEBUG: Service - Created album result: {created_album}")
+            
+            if not created_album:
+                raise DatabaseException("Failed to create gallery album")
+            
+            return created_album
+            
+        except Exception as e:
+            print(f"DEBUG: Service - Exception in create_gallery_album: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            raise handle_supabase_error(e, "create gallery album")
+    
+    async def get_gallery_albums(self, destination_id: Optional[str] = None) -> List[dict]:
+        """Get all gallery albums with enriched data"""
+        try:
+            def _get_albums():
+                query = self._get_client().table("gallery_albums").select(
+                    "*, gallery_images(*), destinations(name)"
+                )
+                
+                if destination_id:
+                    query = query.eq("destination_id", destination_id)
+                
+                query = query.order("created_at", desc=True)
+                response = query.execute()
+                
+                albums_data = response.data if response.data else []
+                
+                # Enrich albums with image count and cover image
+                enriched_albums = []
+                for album in albums_data:
+                    enriched_album = album.copy()
+                    
+                    # Extract destination name
+                    if album.get('destinations'):
+                        enriched_album['destination_name'] = album['destinations'].get('name')
+                    else:
+                        enriched_album['destination_name'] = None
+                    
+                    # Handle images - rename from gallery_images to images and sort by display_order
+                    images = album.get('gallery_images', [])
+                    if images:
+                        # Sort by display_order to ensure first image is the cover
+                        images.sort(key=lambda x: x.get('display_order', 0))
+                    
+                    enriched_album['image_count'] = len(images)
+                    enriched_album['cover_image_url'] = images[0]['image_url'] if images else None
+                    
+                    # Remove gallery_images key and add images key for consistency
+                    if 'gallery_images' in enriched_album:
+                        del enriched_album['gallery_images']
+                    
+                    enriched_albums.append(enriched_album)
+                
+                return enriched_albums
+            
+            albums = await self._run_sync(_get_albums)
+            return albums
+            
+        except Exception as e:
+            raise handle_supabase_error(e, "get gallery albums")
+    
+    async def get_gallery_album_by_id(self, album_id: str) -> Optional[dict]:
+        """Get gallery album by ID"""
+        try:
+            def _get_album():
+                response = self._get_client().table("gallery_albums").select("*").eq("id", album_id).maybe_single().execute()
+                return response.data if response and response.data else None
+            
+            album = await self._run_sync(_get_album)
+            return album
+            
+        except Exception as e:
+            error_str = str(e).lower()
+            if any(phrase in error_str for phrase in ["no rows found", "not found", "pgrst116"]):
+                return None
+            raise handle_supabase_error(e, "get gallery album by ID")
+    
+    async def get_gallery_album_with_images(self, album_id: str) -> Optional[dict]:
+        """Get gallery album with all its images"""
+        try:
+            print(f"DEBUG: Service - Getting album with images for ID: {album_id}")
+            
+            def _get_album():
+                print("DEBUG: Service - Building query for album with images")
+                query = self._get_client().table("gallery_albums").select(
+                    "*, gallery_images(*), destinations(name)"
+                ).eq("id", album_id).single()
+                
+                print("DEBUG: Service - Executing query")
+                response = query.execute()
+                print(f"DEBUG: Service - Query response: {response}")
+                
+                if not response or not response.data:
+                    print("DEBUG: Service - No response or no data")
+                    return None
+                
+                album_data = response.data
+                print(f"DEBUG: Service - Raw album data: {album_data}")
+                
+                # Extract destination name
+                if album_data.get('destinations'):
+                    album_data['destination_name'] = album_data['destinations'].get('name')
+                    print(f"DEBUG: Service - Added destination_name: {album_data.get('destination_name')}")
+                else:
+                    album_data['destination_name'] = None
+                
+                # Handle images - rename from gallery_images to images for consistency
+                if 'gallery_images' in album_data:
+                    album_data['images'] = album_data['gallery_images']
+                    del album_data['gallery_images']  # Remove the original key
+                    print(f"DEBUG: Service - Renamed gallery_images to images: {len(album_data['images'])} images found")
+                else:
+                    album_data['images'] = []
+                    print("DEBUG: Service - Set empty images array")
+                
+                # Sort images by display_order
+                if album_data['images']:
+                    album_data['images'].sort(key=lambda x: x.get('display_order', 0))
+                    print("DEBUG: Service - Sorted images by display_order")
+                
+                album_data['image_count'] = len(album_data['images'])
+                album_data['cover_image_url'] = album_data['images'][0]['image_url'] if album_data['images'] else None
+                print(f"DEBUG: Service - Added image_count: {album_data['image_count']}, cover_image_url: {album_data['cover_image_url']}")
+                
+                return album_data
+            
+            album = await self._run_sync(_get_album)
+            print(f"DEBUG: Service - Final album result: {album}")
+            return album
+            
+        except Exception as e:
+            print(f"DEBUG: Service - Exception in get_gallery_album_with_images: {type(e).__name__}: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            error_str = str(e).lower()
+            if any(phrase in error_str for phrase in ["no rows found", "not found", "pgrst116"]):
+                return None
+            raise handle_supabase_error(e, "get gallery album with images")
+    
+    async def update_gallery_album(self, album_id: str, update_data: dict) -> dict:
+        """Update gallery album"""
+        try:
+            update_data["updated_at"] = datetime.utcnow().isoformat()
+            
+            def _update_album():
+                response = self._get_client().table("gallery_albums").update(update_data).eq("id", album_id).execute()
+                return response.data[0] if response.data else None
+            
+            updated_album = await self._run_sync(_update_album)
+            
+            if not updated_album:
+                raise NotFoundException("Gallery Album", album_id)
+            
+            return updated_album
+            
+        except Exception as e:
+            raise handle_supabase_error(e, "update gallery album")
+    
+    async def delete_gallery_album(self, album_id: str) -> bool:
+        """Delete gallery album (cascade deletes images)"""
+        try:
+            def _delete_album():
+                response = self._get_client().table("gallery_albums").delete().eq("id", album_id).execute()
+                return len(response.data) > 0 if response.data else False
+            
+            deleted = await self._run_sync(_delete_album)
+            return deleted
+            
+        except Exception as e:
+            raise handle_supabase_error(e, "delete gallery album")
+    
+    # Gallery Album Image operations
+    async def create_gallery_album_image(self, image_data: dict) -> dict:
+        """Create new gallery album image"""
+        try:
+            def _create_image():
+                response = self._get_client().table("gallery_images").insert(image_data).execute()
+                return response.data[0] if response.data else None
+            
+            created_image = await self._run_sync(_create_image)
+            
+            if not created_image:
+                raise DatabaseException("Failed to create gallery image")
+            
+            return created_image
+            
+        except Exception as e:
+            raise handle_supabase_error(e, "create gallery image")
+    
+    async def get_gallery_album_image_by_id(self, image_id: str) -> Optional[dict]:
+        """Get gallery album image by ID"""
+        try:
+            def _get_image():
+                response = self._get_client().table("gallery_images").select("*").eq("id", image_id).maybe_single().execute()
+                return response.data if response and response.data else None
+            
+            image = await self._run_sync(_get_image)
+            return image
+            
+        except Exception as e:
+            error_str = str(e).lower()
+            if any(phrase in error_str for phrase in ["no rows found", "not found", "pgrst116"]):
+                return None
+            raise handle_supabase_error(e, "get gallery image by ID")
+    
+    async def update_gallery_album_image(self, image_id: str, update_data: dict) -> dict:
+        """Update gallery album image"""
+        try:
+            update_data["updated_at"] = datetime.utcnow().isoformat()
+            
+            def _update_image():
+                response = self._get_client().table("gallery_images").update(update_data).eq("id", image_id).execute()
+                return response.data[0] if response.data else None
+            
+            updated_image = await self._run_sync(_update_image)
+            
+            if not updated_image:
+                raise NotFoundException("Gallery Image", image_id)
+            
+            return updated_image
+            
+        except Exception as e:
+            raise handle_supabase_error(e, "update gallery image")
+    
+    async def delete_gallery_album_image(self, image_id: str) -> bool:
+        """Delete gallery album image"""
+        try:
+            def _delete_image():
+                response = self._get_client().table("gallery_images").delete().eq("id", image_id).execute()
+                return len(response.data) > 0 if response.data else False
+            
+            deleted = await self._run_sync(_delete_image)
+            return deleted
+            
+        except Exception as e:
+            raise handle_supabase_error(e, "delete gallery image")
+    
+    async def get_gallery_stats(self) -> dict:
+        """Get gallery statistics"""
+        try:
+            def _get_stats():
+                # Get total albums
+                albums_response = self._get_client().table("gallery_albums").select("id", count='exact').execute()
+                total_albums = albums_response.count if hasattr(albums_response, 'count') else 0
+                
+                # Get total images
+                images_response = self._get_client().table("gallery_images").select("id", count='exact').execute()
+                total_images = images_response.count if hasattr(images_response, 'count') else 0
+                
+                return {
+                    "total_albums": total_albums,
+                    "total_images": total_images,
+                    "average_images_per_album": round(total_images / total_albums, 2) if total_albums > 0 else 0
+                }
+            
+            stats = await self._run_sync(_get_stats)
+            return stats
+            
+        except Exception as e:
+            raise handle_supabase_error(e, "get gallery stats")

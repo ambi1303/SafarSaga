@@ -62,8 +62,12 @@ app = FastAPI(
             "description": "Booking management and reservations"
         },
         {
-            "name": "Gallery",
-            "description": "Image gallery and media management"
+            "name": "Gallery Albums",
+            "description": "Album-based gallery management system"
+        },
+        {
+            "name": "Gallery Images",
+            "description": "Gallery image management within albums"
         },
         {
             "name": "Payments",
@@ -154,6 +158,7 @@ async def api_info():
             "events": "/api/events/*",
             "bookings": "/api/bookings/*",
             "gallery": "/api/gallery/*",
+            "gallery_albums": "/api/gallery-albums/*",
             "payments": "/api/payments/*"
         },
         "authentication": {
@@ -269,7 +274,7 @@ async def general_exception_handler(request, exc):
     )
 
 # Include routers
-from app.routers import auth, events, bookings, gallery, destinations, admin_users
+from app.routers import auth, events, bookings, destinations, admin_users, gallery_albums
 from app.middleware.auth import add_security_headers, log_requests
 from app.services.supabase_service import SupabaseService
 
@@ -287,7 +292,9 @@ app.include_router(events.router, prefix="/api/events", tags=["Events"])
 app.include_router(bookings.router, prefix="/api/bookings", tags=["Bookings"])
 
 # Include gallery routes
-app.include_router(gallery.router, prefix="/api/gallery", tags=["Gallery"])
+
+# Include gallery albums routes
+app.include_router(gallery_albums.router, prefix="/api/gallery-albums", tags=["Gallery Albums"])
 
 # Include destinations routes
 app.include_router(destinations.router, prefix="/api/destinations", tags=["Destinations"])
